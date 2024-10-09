@@ -41,7 +41,9 @@ if (builder.Environment.IsDevelopment())
 	// Allow CORS for development
 	app.UseCors(cors =>
 	{
-		cors.WithOrigins("https://localhost:3999");
+		cors.WithOrigins("http://localhost:3999")
+			.AllowAnyHeader()
+			.AllowAnyMethod();
 	});
 }
 
