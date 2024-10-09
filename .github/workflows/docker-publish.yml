@@ -37,8 +37,8 @@ jobs:
         uses: sigstore/cosign-installer@v3.5.0 #v3.5.0
         with:
           cosign-release: 'v2.2.4'
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+   #   - name: Set up QEMU
+   #     uses: docker/setup-qemu-action@v3
 
       # Set up BuildKit Docker container builder to be able to build
       # multi-platform images and export cache
@@ -75,7 +75,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/arm64
+          #platforms: linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
