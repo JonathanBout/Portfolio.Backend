@@ -36,10 +36,13 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/api/json", (HttpContext ctx, [FromQuery(Name = "exclude_langs")]string excludedLanguages = "") =>
+if (builder.Environment.IsDevelopment())
 {
-	ctx.Response.Redirect($"/api/top-languages?exclude_langs={excludedLanguages}", true, true);
-	return Task.CompletedTask;
-});
+	// Allow CORS for development
+	app.UseCors(cors =>
+	{
+		cors.WithOrigins("https://localhost:3999");
+	});
+}
 
 app.Run();
