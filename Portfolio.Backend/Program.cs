@@ -13,8 +13,9 @@ builder.Services.AddControllers();
 
 builder.Services.AddMemoryCache();
 
-builder.Services.AddOptions<GitHubConfiguration>()
-	.ValidateOnStart()
+builder.Services.AddResponseCaching();
+
+builder.Services.AddOptionsWithValidateOnStart<GitHubConfiguration>()
 	.BindConfiguration("GitHub");
 
 builder.Services.AddTransient<ICredentialStore, ConfigurationCredentialStore>();
@@ -30,11 +31,11 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
-app.UseHttpsRedirection();
-
 app.UseAuthorization();
+app.UseResponseCaching();
 
 app.MapControllers();
+
 
 if (builder.Environment.IsDevelopment())
 {
