@@ -37,15 +37,15 @@ app.UseResponseCaching();
 app.MapControllers();
 
 
-if (builder.Environment.IsDevelopment())
+app.UseCors(cors =>
 {
-	// Allow CORS for development
-	app.UseCors(cors =>
-	{
-		cors.WithOrigins("http://localhost:3999")
-			.AllowAnyHeader()
-			.AllowAnyMethod();
-	});
-}
+	var corsOrigins = app.Configuration.GetSection("CORS_ALLOWED_ORIGINS").Get<string>();
+
+	var origins = corsOrigins?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? [];
+
+	cors.WithOrigins(origins)
+		.AllowAnyHeader()
+		.AllowAnyMethod();
+});
 
 app.Run();
