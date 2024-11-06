@@ -39,7 +39,7 @@ jobs:
 
   build:
   # only run when building for production
-    if: env.IS_PRODUCTION_BUILD
+    if: github.event_name != 'pull_request' # can't use env here for some reason
     needs: 
         - test
     # runs-on: ${{ env.IS_PRODUCTION_BUILD && 'buildjet-2vcpu-ubuntu-2204-arm' || 'ubuntu-latest' }}
