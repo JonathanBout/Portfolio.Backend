@@ -102,7 +102,7 @@ jobs:
           push: ${{ env.PUSH_IMAGE == 'true' }} # only push when pushing image
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/arm64
+          platforms: ${{ env.PUSH_IMAGE == 'true' && 'linux/arm64' || 'linux/amd64' }} # only build for arm64 when pushing image, otherwise amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
