@@ -39,7 +39,7 @@ jobs:
 
   build:
   # only run when building for production
-    if: ${{ env.IS_PRODUCTION_BUILD == 'true' }}
+    if: env.IS_PRODUCTION_BUILD
     needs: 
         - test
     # runs-on: ${{ env.IS_PRODUCTION_BUILD && 'buildjet-2vcpu-ubuntu-2204-arm' || 'ubuntu-latest' }}
@@ -58,7 +58,7 @@ jobs:
       # Install the cosign tool except on PR
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.5.0 #v3.5.0
-        if: ${{ env.IS_PRODUCTION_BUILD == 'true' }}
+        if: env.IS_PRODUCTION_BUILD == 'true'
         with:
           cosign-release: 'v2.2.4'
 
@@ -102,7 +102,7 @@ jobs:
       # transparency data even for private images, pass --force to cosign below.
       # https://github.com/sigstore/cosign
       - name: Sign the published Docker image
-        if: ${{ env.IS_PRODUCTION_BUILD == 'true' }}
+        if: env.IS_PRODUCTION_BUILD == 'true'
         env:
           # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
           TAGS: ${{ steps.meta.outputs.tags }}
