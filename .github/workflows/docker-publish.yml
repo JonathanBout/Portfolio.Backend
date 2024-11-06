@@ -15,9 +15,8 @@ env:
   REGISTRY: ghcr.io
   # <account>/<repo>
   IMAGE_NAME: jonathanbout/portfolio-backend
-  PUSH_IMAGE: ${{ github.event_name != 'pull_request' }}
+  IS_PRODUCTION_BUILD: ${{ github.event_name != 'pull_request' }}
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
-
 
 jobs:
   test:
@@ -37,10 +36,12 @@ jobs:
         run: dotnet build Portfolio.Backend.sln  --no-restore
       - name: Test
         run: dotnet test Portfolio.Backend.Tests/Portfolio.Backend.Tests.csproj --no-restore
+
   build:
     needs: 
         - test
-    runs-on: ubuntu-latest
+    runs-on: ${{ env.IS_PRODUCTION_BUILD && 'buildjet-2vcpu-ubuntu-2204-arm' || 'ubuntu-latest' }}
+
     permissions:
       contents: read
       packages: write
@@ -58,20 +59,11 @@ jobs:
         uses: sigstore/cosign-installer@v3.5.0 #v3.5.0
         with:
           cosign-release: 'v2.2.4'
-      - name: Set up QEMU # as QEMU makes the build significantly slower, 
-        if: env.PUSH_IMAGE == 'true' # only run when pushing image
-        uses: docker/setup-qemu-action@v3
-
-      # Set up BuildKit Docker container builder to be able to build
-      # multi-platform images and export cache
-      # https://github.com/docker/setup-buildx-action
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.0.0 # v3.0.0
 
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
       - name: Log into registry ${{ env.REGISTRY }}
-        if: env.PUSH_IMAGE == 'true' # only run when pushing image
+        if: env.IS_PRODUCTION_BUILD == 'true' # only run when pushing image
         uses: docker/login-action@v3.0.0 # v3.0.0
         with:
           registry: ${{ env.REGISTRY }}
@@ -99,12 +91,10 @@ jobs:
         with:
           context: .
           file: ./Portfolio.Backend/Dockerfile
-          push: ${{ env.PUSH_IMAGE == 'true' }} # only push when pushing image
+          push: ${{ env.IS_PRODUCTION_BUILD == 'true' }} # only push when pushing image
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: ${{ env.PUSH_IMAGE == 'true' && 'linux/arm64' || 'linux/amd64' }} # only build for arm64 when pushing image, otherwise amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          platforms: ${{ env.IS_PRODUCTION_BUILD == 'true' && 'linux/arm64' || 'linux/amd64' }} # only build for arm64 when pushing image, otherwise amd64
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
@@ -112,7 +102,7 @@ jobs:
       # transparency data even for private images, pass --force to cosign below.
       # https://github.com/sigstore/cosign
       - name: Sign the published Docker image
-        if: ${{ env.PUSH_IMAGE == 'true' }}
+        if: ${{ env.IS_PRODUCTION_BUILD == 'true' }}
         env:
           # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
           TAGS: ${{ steps.meta.outputs.tags }}
