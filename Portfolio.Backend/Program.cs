@@ -1,9 +1,15 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Octokit.GraphQL;
 using Portfolio.Backend.Configuration;
+using Portfolio.Backend.Extensions;
 using Portfolio.Backend.Services;
+using Portfolio.Backend.Services.Implementation;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +24,15 @@ builder.Services.AddResponseCaching();
 builder.Services.AddOptionsWithValidateOnStart<GitHubConfiguration>()
 	.BindConfiguration("GitHub");
 
+builder.Services.AddOptionsWithValidateOnStart<CryptoConfiguration>()
+	.BindConfiguration("Crypto");
+
+builder.Services.AddOptionsWithValidateOnStart<AuthenticationConfiguration>()
+	.BindConfiguration("Auth");
+
+builder.Services.AddOptionsWithValidateOnStart<EmailConfiguration>()
+	.BindConfiguration("Email");
+
 builder.Services.AddTransient<ICredentialStore, ConfigurationCredentialStore>();
 
 builder.Services.AddScoped<IConnection>(sp =>
@@ -27,13 +42,43 @@ builder.Services.AddScoped<IConnection>(sp =>
 	return new Connection(new ProductHeaderValue("portfolio-backend"), creds);
 });
 
+builder.Services.AddScoped<ICryptoHelper, CryptoHelper>();
+builder.Services.AddScoped<IEmailer, EmailSender>();
+builder.Services.AddTransient<IResetPasswordEmailProvider, ResetPasswordEmailProvider>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthenticator, AuthenticationManager>();
+
+builder.Services.AddDbContext<DatabaseContext>(options =>
+{
+	options.UseNpgsql(builder.Configuration.GetConnectionString("postgres"), postgres =>
+	{
+		postgres.EnableRetryOnFailure(3);
+	});
+	options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
+	options.EnableDetailedErrors(builder.Environment.IsDevelopment());
+	options.UseLazyLoadingProxies();
+	options.UseSnakeCaseNamingConvention();
+});
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+	.AddJwtBearer(options =>
+	{
+		options.TokenValidationParameters.ValidIssuer = builder.Configuration["Auth:Issuer"];
+		options.TokenValidationParameters.ValidAudience = builder.Configuration["Auth:Audience"];
+		options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Auth:Secret"] ?? ""));
+
+		options.TokenValidationParameters.ValidateIssuer = true; 
+		options.TokenValidationParameters.ValidateAudience = true;
+
+		options.AddRefreshTokenValidator();
+	});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
 app.UseAuthorization();
 app.UseResponseCaching();
-
 app.MapControllers();
 
 
@@ -47,5 +92,11 @@ app.UseCors(cors =>
 		.AllowAnyHeader()
 		.AllowAnyMethod();
 });
+
+using (var scope = app.Services.CreateScope())
+{
+	var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+	db.Database.Migrate();
+}
 
 app.Run();

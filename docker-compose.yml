@@ -1,0 +1,46 @@
+services:
+  portfolio.backend:
+    image: ${DOCKER_REGISTRY-}portfoliobackend
+    build:
+      context: .
+      dockerfile: Portfolio.Backend/Dockerfile
+    environment:
+    - "ConnectionStrings__Postgres=user id=${POSTGRES_USER};password=${POSTGRES_PASSWORD};host=db;database=${POSTGRES_DB}"
+    - Auth__Secret=${AUTH_SECRET}
+    - Auth__Issuer=${AUTH_ISSUER}
+    - Auth__Audience=${AUTH_AUDIENCE}
+    - Email__SmtpServer=${SMTP_SERVER}
+    - Email__Username=${SMTP_USERNAME}
+    - Email__Password=${SMTP_PASSWORD}
+    - Email__Port=${SMTP_PORT:-587}
+    - Email__UseSSL=${SMTP_ENABLE_SSL-true}
+    - Email__FromEmail=${SMTP_SENDER_ADDRESS}
+    - Email__FromName=${SMTP_SENDER_NAME}
+    depends_on:
+    - db
+
+  db:
+    image: postgres
+    environment:
+    - POSTGRES_USER=${POSTGRES_USER}
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+        - "5432:5432"
+    volumes:
+    - db-data:/var/lib/postgresql/data
+  pg-admin:
+    image: dpage/pgadmin4
+    environment:
+    - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+    - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+    - db
+    volumes:
+    - pgadmin-data:/var/lib/pgadmin
+
+volumes:
+  db-data:
+  pgadmin-data:
