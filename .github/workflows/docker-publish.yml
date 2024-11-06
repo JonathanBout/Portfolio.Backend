@@ -1,4 +1,4 @@
-name: Docker
+name: Test & Publish to GHCR
 
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
@@ -8,18 +8,22 @@ name: Docker
 on:
   push:
     branches: [ "release" ]
+  pull_request:
 
 env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # <account>/<repo>
   IMAGE_NAME: jonathanbout/portfolio-backend
+  PUSH_IMAGE: ${{ github.event_name != 'pull_request' }}
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
 
 
 jobs:
   test:
     runs-on: ubuntu-latest
     # run dotnet test
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,7 +37,6 @@ jobs:
         run: dotnet build --no-restore
       - name: Test
         run: dotnet test --no-restore
-
   build:
     needs: 
         - test
@@ -55,7 +58,8 @@ jobs:
         uses: sigstore/cosign-installer@v3.5.0 #v3.5.0
         with:
           cosign-release: 'v2.2.4'
-      - name: Set up QEMU
+      - name: Set up QEMU # as QEMU makes the build significantly slower, 
+        if: env.PUSH_IMAGE == 'true' # only run when pushing image
         uses: docker/setup-qemu-action@v3
 
       # Set up BuildKit Docker container builder to be able to build
@@ -67,7 +71,7 @@ jobs:
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
       - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
+        if: env.PUSH_IMAGE == 'true' # only run when pushing image
         uses: docker/login-action@v3.0.0 # v3.0.0
         with:
           registry: ${{ env.REGISTRY }}
@@ -81,7 +85,12 @@ jobs:
         uses: docker/metadata-action@v5.0.0 # v5.0.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
+          tags: |
+            latest
+            ${{ github.sha }}
+            ${{ env.BRANCH_NAME }}
+      - name: Output tags
+        run: echo "${{ steps.meta.outputs.tags }}"
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
@@ -90,7 +99,7 @@ jobs:
         with:
           context: .
           file: ./Portfolio.Backend/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ env.PUSH_IMAGE == 'true' }} # only push when pushing image
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/arm64
@@ -103,7 +112,7 @@ jobs:
       # transparency data even for private images, pass --force to cosign below.
       # https://github.com/sigstore/cosign
       - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ env.PUSH_IMAGE == 'true' }}
         env:
           # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
           TAGS: ${{ steps.meta.outputs.tags }}
