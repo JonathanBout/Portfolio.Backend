@@ -22,7 +22,7 @@ namespace Portfolio.Backend.Controllers
 		public Ok<UserResponse> GetMe()
 		{
 			var user = HttpContext.GetCurrentUser()!;
-			return TypedResults.Ok(GetUserResponse(user));
+			return TypedResults.Ok(UserResponse.FromUser(user));
 		}
 
 
@@ -41,7 +41,7 @@ namespace Portfolio.Backend.Controllers
 
 			_userService.UpdateUser(user);
 
-			return TypedResults.Ok(GetUserResponse(user));
+			return TypedResults.Ok(UserResponse.FromUser(user));
 		}
 
 		[HttpPut("me/image")]
@@ -71,7 +71,7 @@ namespace Portfolio.Backend.Controllers
 			var user = _userService.GetUserBySlug(slug);
 			return user is null
 				? TypedResults.NotFound()
-				: TypedResults.Ok(GetUserResponse(user));
+				: TypedResults.Ok(UserResponse.FromUser(user));
 		}
 
 		[HttpGet("{slug}/image")]
@@ -97,8 +97,9 @@ namespace Portfolio.Backend.Controllers
 			return TypedResults.File(user.ProfileImage);
 		}
 
-		private string GetCanonicalUserUrl(string slug) => Url.ActionLink(nameof(GetUser), values: new { slug = slug.ToLower() })!;
-		private UserResponse GetUserResponse(User user) => new(user.Email, user.FullName, user.Description, GetCanonicalUserUrl(user.NameSlug));
-		public record UserResponse(string Email, string FullName, string Description, string CanonicalUrl);
+		public record UserResponse(string Email, string FullName, string Description)
+		{
+			public static UserResponse FromUser(User user) => new(user.Email, user.FullName, user.Description);
+		}
 	}
 }
