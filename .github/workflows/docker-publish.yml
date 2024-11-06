@@ -1,4 +1,4 @@
-name: Docker
+name: Test & Publish to GHCR
 
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
@@ -8,16 +8,39 @@ name: Docker
 on:
   push:
     branches: [ "release" ]
+  pull_request:
 
 env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # <account>/<repo>
   IMAGE_NAME: jonathanbout/portfolio-backend
+  IS_PRODUCTION_BUILD: ${{ github.event_name != 'pull_request' }}
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    # run dotnet test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Install dependencies
+        run: dotnet restore Portfolio.Backend.sln
+      - name: Build
+        run: dotnet build Portfolio.Backend.sln  --no-restore
+      - name: Test
+        run: dotnet test Portfolio.Backend.Tests/Portfolio.Backend.Tests.csproj --no-restore
+
   build:
-    runs-on: buildjet-2vcpu-ubuntu-2204-arm
+    needs: 
+        - test
+    runs-on: ${{ env.IS_PRODUCTION_BUILD && 'buildjet-2vcpu-ubuntu-2204-arm' || 'ubuntu-latest' }}
 
     permissions:
       contents: read
@@ -40,7 +63,7 @@ jobs:
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
       - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
+        if: env.IS_PRODUCTION_BUILD == 'true' # only run when pushing image
         uses: docker/login-action@v3.0.0 # v3.0.0
         with:
           registry: ${{ env.REGISTRY }}
@@ -54,7 +77,12 @@ jobs:
         uses: docker/metadata-action@v5.0.0 # v5.0.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
+          tags: |
+            latest
+            ${{ github.sha }}
+            ${{ env.BRANCH_NAME }}
+      - name: Output tags
+        run: echo "${{ steps.meta.outputs.tags }}"
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
@@ -63,9 +91,10 @@ jobs:
         with:
           context: .
           file: ./Portfolio.Backend/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ env.IS_PRODUCTION_BUILD == 'true' }} # only push when pushing image
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          platforms: ${{ env.IS_PRODUCTION_BUILD == 'true' && 'linux/arm64' || 'linux/amd64' }} # only build for arm64 when pushing image, otherwise amd64
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
@@ -73,7 +102,7 @@ jobs:
       # transparency data even for private images, pass --force to cosign below.
       # https://github.com/sigstore/cosign
       - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ env.IS_PRODUCTION_BUILD == 'true' }}
         env:
           # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
           TAGS: ${{ steps.meta.outputs.tags }}

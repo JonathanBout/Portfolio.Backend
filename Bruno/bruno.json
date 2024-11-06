@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Portfolio Backend",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
