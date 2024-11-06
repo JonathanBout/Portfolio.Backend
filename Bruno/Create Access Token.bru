@@ -1,0 +1,31 @@
+meta {
+  name: Create Access Token
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base}}/auth/refresh?email={{email}}&refreshTokenId={{refreshTokenId}}&refreshToken={{refreshToken}}
+  body: none
+  auth: none
+}
+
+params:query {
+  email: {{email}}
+  refreshTokenId: {{refreshTokenId}}
+  refreshToken: {{refreshToken}}
+}
+
+body:json {
+  {
+    "Email": "{{email}}",
+    "Password": "{{password}}"
+  }
+}
+
+script:post-response {
+  if (res.status >= 200 && res.status < 300) {
+    bru.setEnvVar("accessToken", res.body.accessToken);   
+  }
+  
+}
