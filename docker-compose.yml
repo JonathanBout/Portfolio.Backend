@@ -17,7 +17,7 @@ services:
     - Email__FromEmail=${SMTP_SENDER_ADDRESS}
     - Email__FromName=${SMTP_SENDER_NAME}
     depends_on:
-    - db
+    - db  
 
   db:
     image: postgres

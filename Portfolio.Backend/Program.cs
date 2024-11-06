@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -81,7 +82,6 @@ app.UseAuthorization();
 app.UseResponseCaching();
 app.MapControllers();
 
-
 app.UseCors(cors =>
 {
 	var corsOrigins = app.Configuration.GetSection("CORS_ALLOWED_ORIGINS").Get<string>();
@@ -91,6 +91,11 @@ app.UseCors(cors =>
 	cors.WithOrigins(origins)
 		.AllowAnyHeader()
 		.AllowAnyMethod();
+});
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+	ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
 });
 
 using (var scope = app.Services.CreateScope())
