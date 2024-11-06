@@ -132,13 +132,14 @@ namespace Portfolio.Backend.Services.Implementation
 		{
 			return BinaryPrimitives.ReadInt32LittleEndian(hash[..sizeof(int)]);
 		}
-		public byte[] Hash_v1(ReadOnlySpan<byte> input)
+		internal byte[] Hash_v1(ReadOnlySpan<byte> input)
 		{
 			/*
 			 * v1 hash format:
 			 * <version><key size><salt size><key><salt><iterations><memory><parallelism>
 			 * Number conversions are all little-endian.
 			 */
+
 			using var argon2 = CreateArgon2(input, _cryptoConfig.Iterations, _cryptoConfig.MemorySize, _cryptoConfig.Parallelism);
 
 			// efficiently allocate the exact size needed for the hash
@@ -190,7 +191,7 @@ namespace Portfolio.Backend.Services.Implementation
 
 			return resultHash;
 		}
-		public static (int keySize, int saltSize, byte[] hash, byte[] salt, int iterations, int memory, int parallelism) ParseHash_v1(ReadOnlySpan<byte> hash)
+		internal static (int keySize, int saltSize, byte[] hash, byte[] salt, int iterations, int memory, int parallelism) ParseHash_v1(ReadOnlySpan<byte> hash)
 		{
 			var offset = sizeof(int); // skip the version number
 
@@ -223,7 +224,7 @@ namespace Portfolio.Backend.Services.Implementation
 			return (keySize, saltSize, key, salt, iterations, memory, parallelism);
 		}
 
-		public byte[] GenerateSalt()
+		internal byte[] GenerateSalt()
 		{
 			var salt = new byte[_cryptoConfig.SaltSize];
 			RandomNumberGenerator.Fill(salt.AsSpan());
