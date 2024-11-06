@@ -40,8 +40,8 @@ jobs:
   build:
     needs: 
         - test
-    runs-on: ${{ env.IS_PRODUCTION_BUILD && 'buildjet-2vcpu-ubuntu-2204-arm' || 'ubuntu-latest' }}
-
+    # runs-on: ${{ env.IS_PRODUCTION_BUILD && 'buildjet-2vcpu-ubuntu-2204-arm' || 'ubuntu-latest' }}
+    runs-on: buildjet-2vcpu-ubuntu-2204-arm
     permissions:
       contents: read
       packages: write
