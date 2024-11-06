@@ -97,6 +97,22 @@ using (var scope = app.Services.CreateScope())
 {
 	var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
 	db.Database.Migrate();
+
+	var user = db.Users.First(u => u.Id == 1);
+
+	if (user.PasswordHash.Length == 0)
+	{
+		var crypto = scope.ServiceProvider.GetRequiredService<ICryptoHelper>();
+		var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+		var password = crypto.GenerateStrongPassword();
+
+		logger.LogWarning("No password hash found for the default user. Generating one: {newPassword}", password);
+
+		user.PasswordHash = crypto.Hash(password);
+
+		db.SaveChanges();
+	}
 }
 
 app.Run();

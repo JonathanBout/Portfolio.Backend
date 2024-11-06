@@ -18,11 +18,17 @@ namespace Portfolio.Backend.Services.Implementation
 
 		public byte[] Hash(ReadOnlySpan<byte> input)
 		{
+			if (input.Length == 0)
+				return [];
+
 			return Hash_v1(input);
 		}
 
 		public VerificationResult Verify(ReadOnlySpan<byte> input, ReadOnlySpan<byte> hash)
 		{
+			if (input is { Length: 0 } || hash is { Length: 0 })
+				return VerificationResult.Failed;
+
 			var version = GetHashVersion(hash);
 
 			var result = version switch
