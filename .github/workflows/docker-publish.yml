@@ -38,6 +38,7 @@ jobs:
         run: dotnet test Portfolio.Backend.Tests/Portfolio.Backend.Tests.csproj --no-restore
 
   build:
+    if: ${{ env.IS_PRODUCTION_BUILD == 'true' }}
     needs: 
         - test
     # runs-on: ${{ env.IS_PRODUCTION_BUILD && 'buildjet-2vcpu-ubuntu-2204-arm' || 'ubuntu-latest' }}
