@@ -53,6 +53,15 @@ namespace Portfolio.Backend.Controllers
 			return TypedResults.Ok();
 		}
 
+		[HttpDelete("me/image")]
+		public Results<NoContent, BadRequest> DeleteMeImage()
+		{
+			var user = HttpContext.GetCurrentUser()!;
+			user.ProfileImage = null;
+			_userService.UpdateUser(user);
+			return TypedResults.NoContent();
+		}
+
 		public record UpdateUserRequest(string? FullName = null, string? Description = null);
 
 		[HttpGet("{slug}")]
@@ -81,6 +90,7 @@ namespace Portfolio.Backend.Controllers
 
 				var hashString = Convert.ToHexString(emailHash).ToLower();
 
+				// d=retro to get a retro default image
 				return TypedResults.Redirect($"https://www.gravatar.com/avatar/{hashString}?d=retro&s={size}");
 			}
 
