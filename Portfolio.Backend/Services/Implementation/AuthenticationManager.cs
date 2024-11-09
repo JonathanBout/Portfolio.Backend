@@ -79,18 +79,20 @@ namespace Portfolio.Backend.Services.Implementation
 			return true;
 		}
 
-		public string? GetAccessToken(string email, uint refreshTokenId, string refreshToken)
+		public (string accessToken, RefreshTokenData newRefreshToken)? GetAccessToken(string email, uint refreshTokenId, string refreshToken)
 		{
 			var user = _database.Users.FirstOrDefault(u => u.Email == email);
 
 			if (user is null)
 				return null;
 
+			// check if the refresh token exists and is not expired
 			var token = user.RefreshTokens.FirstOrDefault(t => t.Id == refreshTokenId);
 
 			if (token is null || token.ExpirationDate < DateTimeOffset.Now)
 				return null;
 
+			// verify the tokens match
 			switch (_crypto.Verify(refreshToken, token.TokenHash))
 			{
 				case VerificationResult.Failed:
@@ -103,6 +105,7 @@ namespace Portfolio.Backend.Services.Implementation
 					break;
 			}
 
+			// create the access token
 			var jwt = new JwtSecurityToken(
 				issuer: _authenticationConfig.Issuer,
 				audience: _authenticationConfig.Audience,
@@ -117,10 +120,16 @@ namespace Portfolio.Backend.Services.Implementation
 				signingCredentials: new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationConfig.Secret)), SecurityAlgorithms.HmacSha256)
 			);
 
-			return new JwtSecurityTokenHandler().WriteToken(jwt);
+			// encrypt and write the accessToken
+			var accessToken = new JwtSecurityTokenHandler().WriteToken(jwt);
+
+			// create a new refresh token. This will replace the old one
+			var newRefreshToken = GetRefreshToken(user, token);
+
+			return (accessToken, newRefreshToken);
 		}
 
-		public (string token, uint id)? GetRefreshToken(string email, string password)
+		public RefreshTokenData? GetRefreshToken(string email, string password)
 		{
 			var user = _database.Users.FirstOrDefault(u => u.Email == email);
 
@@ -139,20 +148,44 @@ namespace Portfolio.Backend.Services.Implementation
 					break;
 			}
 
+			return GetRefreshToken(user);
+		}
+
+		/// <summary>
+		/// Generates a new refresh token for the user. If a token is provided, it will be updated with a new token.
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="tokenToReplace"></param>
+		/// <returns></returns>
+		private RefreshTokenData GetRefreshToken(User user, RefreshToken? tokenToReplace = null)
+		{
 			var token = _crypto.GenerateRandomString(_authenticationConfig.RefreshTokenLength, ICryptoHelper.AlphaNumericCharacters);
 
-			var refreshToken = new RefreshToken
-			{
-				CreationDate = DateTimeOffset.UtcNow,
-				ExpirationDate = DateTimeOffset.UtcNow.AddHours(_authenticationConfig.RefreshTokenExpirationHours),
-				TokenHash = _crypto.Hash(token),
-			};
+			var expiration = DateTimeOffset.UtcNow.AddHours(_authenticationConfig.RefreshTokenExpirationHours);
 
-			user.RefreshTokens.Add(refreshToken);
+			RefreshToken refreshToken;
+
+			if (tokenToReplace is not null)
+			{
+				// make sure we have a tracked version of the token
+				refreshToken = _database.Attach(tokenToReplace).Entity;
+			} else
+			{
+				refreshToken = new RefreshToken
+				{
+					CreationDate = DateTimeOffset.UtcNow,
+				};
+
+				user.RefreshTokens.Add(refreshToken);
+			}
+
+			refreshToken.LastUpdatedDate = DateTimeOffset.UtcNow;
+			refreshToken.ExpirationDate = expiration;
+			refreshToken.TokenHash = _crypto.Hash(token);
 
 			_database.SaveChanges();
 
-			return (token, refreshToken.Id);
+			return (token, refreshToken.Id, expiration);
 		}
 
 		public IEnumerable<RefreshToken> GetRefreshTokens(User user)
@@ -174,7 +207,7 @@ namespace Portfolio.Backend.Services.Implementation
 			return true;
 		}
 
-		
+
 		private static bool ValidatePasswordStrength(ReadOnlySpan<char> password)
 		{
 			return password.Length > 6 && password.ContainsAnyInRange('a', 'z') && password.ContainsAnyInRange('A', 'Z') && password.ContainsAnyInRange('0', '9');

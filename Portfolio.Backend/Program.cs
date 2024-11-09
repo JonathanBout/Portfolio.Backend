@@ -10,6 +10,7 @@ using Portfolio.Backend.Configuration;
 using Portfolio.Backend.Extensions;
 using Portfolio.Backend.Services;
 using Portfolio.Backend.Services.Implementation;
+using System.Diagnostics;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,8 @@ builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddResponseCaching();
+
+builder.Services.AddHttpClient("gravatar");
 
 builder.Services.AddOptionsWithValidateOnStart<GitHubConfiguration>()
 	.BindConfiguration("GitHub");
@@ -48,6 +51,7 @@ builder.Services.AddScoped<IEmailer, EmailSender>();
 builder.Services.AddTransient<IResetPasswordEmailProvider, ResetPasswordEmailProvider>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticator, AuthenticationManager>();
+builder.Services.AddSingleton<IGravatarRetriever, GravatarRetriever>();
 
 builder.Services.AddDbContext<DatabaseContext>(options =>
 {
@@ -68,7 +72,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 		options.TokenValidationParameters.ValidAudience = builder.Configuration["Auth:Audience"];
 		options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Auth:Secret"] ?? ""));
 
-		options.TokenValidationParameters.ValidateIssuer = true; 
+		options.TokenValidationParameters.ValidateIssuer = true;
 		options.TokenValidationParameters.ValidateAudience = true;
 
 		options.AddRefreshTokenValidator();
@@ -77,10 +81,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.Use(async (ctx, next) =>
+{
+	var ts = Stopwatch.GetTimestamp();
 
-app.UseAuthorization();
-app.UseResponseCaching();
-app.MapControllers();
+	await next();
+
+	var elapsed = Stopwatch.GetElapsedTime(ts);
+
+	var logger = ctx.RequestServices.GetRequiredService<ILogger<Program>>();
+
+	logger.LogInformation("Request '{method}' to '{path}' from host '{host}' took {time}ms", ctx.Request.Method, ctx.Request.Path, ctx.Request.Headers.Origin, elapsed.TotalMilliseconds);
+});
 
 app.UseCors(cors =>
 {
@@ -90,13 +102,19 @@ app.UseCors(cors =>
 
 	cors.WithOrigins(origins)
 		.AllowAnyHeader()
-		.AllowAnyMethod();
+		.AllowAnyMethod()
+		.AllowCredentials();
 });
+
+app.UseAuthorization();
+app.UseResponseCaching();
+app.MapControllers();
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
 	ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
 });
+
 
 using (var scope = app.Services.CreateScope())
 {
@@ -105,7 +123,7 @@ using (var scope = app.Services.CreateScope())
 
 	var user = db.Users.First(u => u.Id == 1);
 
-	if (user.PasswordHash.Length == 0)
+	if (user.PasswordHash is not { Length: > 0 })
 	{
 		var crypto = scope.ServiceProvider.GetRequiredService<ICryptoHelper>();
 		var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();

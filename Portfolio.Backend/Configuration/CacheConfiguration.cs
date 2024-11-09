@@ -1,12 +1,12 @@
-﻿namespace Portfolio.Backend.Configuration
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Portfolio.Backend.Configuration
 {
 	public class CacheConfiguration
 	{
-		const int MINUTE = 60;
-		const int HOUR = 60 * MINUTE;
-
-		public int LongCacheDuration { get; set; } = 25 * HOUR;
-		public int MediumCacheDuration { get; set; } = 5 * HOUR;
-		public int ShortCacheDuration { get; set; } = 1 * HOUR;
+		[Range(1, int.MaxValue)]
+		public int GravatarCacheHours { get; set; } = 12;
+		[Range(1, int.MaxValue)]
+		public int TopLanguagesCacheHours { get; set; } = 8;
 	}
 }

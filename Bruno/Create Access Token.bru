@@ -5,21 +5,27 @@ meta {
 }
 
 get {
-  url: {{base}}/auth/refresh?email={{email}}&refreshTokenId={{refreshTokenId}}&refreshToken={{refreshToken}}
+  url: {{base}}/auth/refresh?email={{email}}
   body: none
   auth: none
 }
 
 params:query {
   email: {{email}}
-  refreshTokenId: {{refreshTokenId}}
-  refreshToken: {{refreshToken}}
 }
 
 body:json {
   {
     "Email": "{{email}}",
     "Password": "{{password}}"
+  }
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
   }
 }
 

@@ -1,6 +1,6 @@
 services:
   portfolio.backend:
-    image: ${DOCKER_REGISTRY-}portfoliobackend
+    image: ghcr.io/jonathanbout/portfolio-backend
     build:
       context: .
       dockerfile: Portfolio.Backend/Dockerfile
@@ -16,8 +16,11 @@ services:
     - Email__UseSSL=${SMTP_ENABLE_SSL-true}
     - Email__FromEmail=${SMTP_SENDER_ADDRESS}
     - Email__FromName=${SMTP_SENDER_NAME}
+    - CORS_ALLOWED_ORIGINS=https://localhost:3999
     depends_on:
     - db  
+    ports:
+    - "3998:8081"
 
   db:
     image: postgres

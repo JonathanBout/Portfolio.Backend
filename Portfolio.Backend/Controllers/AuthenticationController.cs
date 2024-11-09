@@ -18,30 +18,97 @@ namespace Portfolio.Backend.Controllers
 		private readonly IAuthenticator _authenticator = authenticator;
 		private readonly IUserService _users = users;
 
-		[HttpGet("refresh")]
-		public Results<Ok<CreatedAccessTokenResponse>, UnauthorizedHttpResult> Refresh([FromQuery] string email, [FromQuery] uint refreshTokenId, [FromQuery] string refreshToken)
+		const string RefreshTokenCookieName = "jbpf-refresh-token";
+
+		[HttpGet("check")]
+		[Authorize]
+		public Ok CheckLoggedIn()
 		{
-			var token = _authenticator.GetAccessToken(email, refreshTokenId, refreshToken);
-			return token is null
-				? TypedResults.Unauthorized()
-				: TypedResults.Ok(new CreatedAccessTokenResponse(token));
+			return TypedResults.Ok();
+		}
+
+		[HttpGet("refresh")]
+		public Results<Ok<CreatedAccessTokenResponse>, UnauthorizedHttpResult> Refresh(string email)
+		{
+			if (GetRefreshToken() is not (string refreshToken, uint refreshTokenId))
+			{
+				return TypedResults.Unauthorized();
+			}
+
+			if (_authenticator.GetAccessToken(email, refreshTokenId, refreshToken)
+					is not (string accessToken, RefreshTokenData newRefreshToken))
+			{
+				return TypedResults.Unauthorized();
+			}
+
+			UpdateRefreshToken(newRefreshToken.token, newRefreshToken.id, newRefreshToken.expiration);
+
+			return TypedResults.Ok(new CreatedAccessTokenResponse(accessToken));
 		}
 		public record CreatedAccessTokenResponse(string AccessToken);
 
 
 		[HttpPost("login")]
-		public Results<Ok<LoginResponse>, UnauthorizedHttpResult> Login([FromBody] LoginRequest request)
+		public Results<Ok, UnauthorizedHttpResult> Login([FromBody] LoginRequest request)
 		{
 			var generatedToken = _authenticator.GetRefreshToken(request.Email, request.Password);
 
-			return generatedToken is not (string token, uint id)
-				? TypedResults.Unauthorized()
-				: TypedResults.Ok(new LoginResponse(token, id));
+			if (generatedToken is not (string token, uint id, DateTimeOffset expiration))
+			{
+				return TypedResults.Unauthorized();
+			}
+
+			UpdateRefreshToken(token, id, expiration);
+
+			return TypedResults.Ok();
+		}
+
+		[HttpPost("logout")]
+		[Authorize]
+		public Results<Ok, UnauthorizedHttpResult> Logout()
+		{
+			var token = GetRefreshToken();
+			var user = HttpContext.GetCurrentUser();
+
+			if (token is not (_, uint tokenId) || user is null)
+			{
+				return TypedResults.Unauthorized();
+			}
+
+			_authenticator.RevokeRefreshToken(user, tokenId);
+
+			HttpContext.Response.Cookies.Delete(RefreshTokenCookieName);
+
+			return TypedResults.Ok();
+		}
+
+		private void UpdateRefreshToken(string token, uint id, DateTimeOffset expiration)
+		{
+			var combinedToken = $"{id}\t{token}";
+
+			HttpContext.Response.Cookies.Append(RefreshTokenCookieName, combinedToken, new CookieOptions
+			{
+				HttpOnly = true,
+				Expires = expiration,
+				Secure = true,
+				SameSite = SameSiteMode.None,
+				Path = "/api/auth/refresh;/api/auth/logout",
+				IsEssential = true,
+				MaxAge = expiration - DateTimeOffset.Now
+			});
+		}
+
+		private (string token, uint tokenId)? GetRefreshToken()
+		{
+			if (!HttpContext.Request.Cookies.TryGetValue(RefreshTokenCookieName, out string? combinedToken))
+			{
+				return null;
+			}
+			var split = combinedToken.Split('\t');
+			return (split[1], uint.Parse(split[0]));
 		}
 
 		public record LoginRequest([Required, EmailAddress] string Email, [Required] string Password);
-		public record LoginResponse(string RefreshToken, uint TokenId);
-
 
 		[Authorize]
 		[HttpGet("tokens")]

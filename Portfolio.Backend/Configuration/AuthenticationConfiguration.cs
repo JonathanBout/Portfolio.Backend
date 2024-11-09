@@ -12,9 +12,12 @@ namespace Portfolio.Backend.Configuration
 		public string Audience { get; set; } = null!;
 
 		[Range(1, int.MaxValue)]
-		public int AccessTokenExpirationMinutes { get; set; } = 15;
+		public int AccessTokenExpirationMinutes { get; set; } = 1;
+		/// <summary>
+		/// The expiration date of a single refresh token
+		/// </summary>
 		[Range(1, int.MaxValue)]
-		public int RefreshTokenExpirationHours { get; set; } = 24 * 14;
+		public int RefreshTokenExpirationHours { get; set; } = 72;
 		[Range(1, int.MaxValue)]
 		public int RefreshTokenLength { get; set; } = 64;
 
