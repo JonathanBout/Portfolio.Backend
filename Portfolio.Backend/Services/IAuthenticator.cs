@@ -1,11 +1,13 @@
-﻿using Portfolio.Backend.Data.Users;
+﻿global using RefreshTokenData = (string token, uint id, System.DateTimeOffset expiration);
+using Portfolio.Backend.Data.Users;
+
 
 namespace Portfolio.Backend.Services
 {
 	public interface IAuthenticator
 	{
-		string? GetAccessToken(string email, uint refreshTokenId, string refreshToken);
-		(string token, uint id)? GetRefreshToken(string email, string password);
+		(string accessToken, RefreshTokenData newRefreshToken)? GetAccessToken(string email, uint refreshTokenId, string refreshToken);
+		RefreshTokenData? GetRefreshToken(string email, string password);
 		bool RevokeRefreshToken(User owner, uint tokenId);
 		void RevokeAllRefreshTokens(User owner);
 		IEnumerable<RefreshToken> GetRefreshTokens(User owner);

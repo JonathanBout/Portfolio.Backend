@@ -23,4 +23,9 @@ script:post-response {
     bru.setEnvVar("refreshTokenId", res.body.tokenId);
   }
   
+  const cookies = res.getHeader('set-cookie');
+  
+  if(cookies) {
+    bru.setVar("cookie", cookies.join('; '));
+  }
 }

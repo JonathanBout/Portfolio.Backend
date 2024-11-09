@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Portfolio.Backend.Data.Users;
 using Portfolio.Backend.Extensions;
 using Portfolio.Backend.Services;
 using System.ComponentModel.DataAnnotations;
+using System.Net.Mime;
 using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography;
 using System.Text;
@@ -17,6 +19,8 @@ namespace Portfolio.Backend.Controllers
 	public class UserController(IUserService userService) : ControllerBase
 	{
 		private readonly IUserService _userService = userService;
+
+		const int HOUR = 60 * 60;
 
 		[HttpGet("me")]
 		public Ok<UserResponse> GetMe()
@@ -42,6 +46,14 @@ namespace Portfolio.Backend.Controllers
 			_userService.UpdateUser(user);
 
 			return TypedResults.Ok(UserResponse.FromUser(user));
+		}
+
+		[HttpGet("me/image")]
+		public RedirectToActionResult GetMeImage([Range(1, 2048)] ushort size = 256)
+		{
+			var currentUser = HttpContext.GetCurrentUser()!;
+
+			return RedirectToAction(nameof(GetUserImage), new { slug = currentUser.NameSlug, size });
 		}
 
 		[HttpPut("me/image")]
@@ -76,7 +88,8 @@ namespace Portfolio.Backend.Controllers
 
 		[HttpGet("{slug}/image")]
 		[AllowAnonymous]
-		public Results<FileContentHttpResult, NotFound, RedirectHttpResult> GetUserImage(string slug, [Range(1, 2048)] ushort size = 256)
+		[ResponseCache(Duration = 3 * HOUR)]
+		public async Task<Results<FileContentHttpResult, FileStreamHttpResult, NotFound>> GetUserImage(IGravatarRetriever gravatar, string slug, [Range(1, 2048)] ushort size = 256)
 		{
 			var user = _userService.GetUserBySlug(slug);
 
@@ -85,13 +98,7 @@ namespace Portfolio.Backend.Controllers
 
 			if (user.ProfileImage is null)
 			{
-				// redirect to Gravatar
-				var emailHash = SHA256.HashData(Encoding.UTF8.GetBytes(user.Email));
-
-				var hashString = Convert.ToHexString(emailHash).ToLower();
-
-				// d=retro to get a retro default image
-				return TypedResults.Redirect($"https://www.gravatar.com/avatar/{hashString}?d=retro&s={size}");
+				return TypedResults.File(await gravatar.Get(user.Email, size));
 			}
 
 			return TypedResults.File(user.ProfileImage);

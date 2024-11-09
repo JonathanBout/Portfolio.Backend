@@ -40,6 +40,7 @@ namespace Portfolio.Backend.Data.Users
 		public uint OwnerId { get; set; }
 		public byte[] TokenHash { get; set; } = [];
 
+		public DateTimeOffset LastUpdatedDate { get; set; } = DateTimeOffset.UtcNow;
 		public DateTimeOffset ExpirationDate { get; set; } = DateTimeOffset.UtcNow.AddDays(30);
 		public DateTimeOffset CreationDate { get; set; } = DateTimeOffset.UtcNow;
 	}

@@ -15,9 +15,10 @@ namespace Portfolio.Backend.Controllers
 {
 	[ApiController]
 	[Route("api/top-languages")]
-	public class TopLanguagesController(IOptionsSnapshot<GitHubConfiguration> options) : ControllerBase
+	public class TopLanguagesController(IOptionsSnapshot<GitHubConfiguration> options, IOptionsSnapshot<CacheConfiguration> cacheOptions) : ControllerBase
 	{
 		private readonly GitHubConfiguration _config = options.Value;
+		private readonly CacheConfiguration _cacheOptions = cacheOptions.Value;
 
 		const string TOP_LANGUAGES_CACHE_KEY = "top-languages";
 
@@ -53,7 +54,7 @@ namespace Portfolio.Backend.Controllers
 				return (await gh.Run(query)).ToList();
 			}, new MemoryCacheEntryOptions
 			{
-				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6),
+				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(_cacheOptions.TopLanguagesCacheHours),
 			});
 
 
