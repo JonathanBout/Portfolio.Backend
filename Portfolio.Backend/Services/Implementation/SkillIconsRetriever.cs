@@ -15,33 +15,42 @@ namespace Portfolio.Backend.Services.Implementation
 
 		const string CACHE_KEY_PREFIX = "skill-icon-";
 
-		public async Task<byte[]> Get(string icon, string theme)
+		public async Task<byte[]> Get(string icon, string theme, bool forceFetch = false)
 		{
-			return await _cache.GetOrCreateAsync($"{CACHE_KEY_PREFIX}{icon}-{theme}", async entry =>
+			if (forceFetch)
 			{
-				icon = HttpUtility.UrlEncode(icon);
-				theme = HttpUtility.UrlEncode(theme);
+				_cache.Remove(GetCacheKey(icon, theme));
+			}
 
-				var url = $"https://skillicons.dev/icons?i={icon}";
-
-				if (!string.IsNullOrWhiteSpace(theme))
-					url += $"&t={theme}";
-
-				var client = _clientFactory.CreateClient("skill-icons");
-
-				var response = await client.GetAsync(url);
-
-				if (!response.IsSuccessStatusCode)
-				{
-					entry.AbsoluteExpirationRelativeToNow = TimeSpan.Zero;
-					return [];
-				}
-
-				return await response.Content.ReadAsByteArrayAsync();
-			}, new()
+			return await _cache.GetOrCreateAsync(GetCacheKey(icon, theme), entry => Fetch(entry, icon, theme), new()
 			{
 				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(CacheOptions.SkillIconsCacheHours)
 			}) ?? [];
 		}
+
+		private async Task<byte[]> Fetch(ICacheEntry entry, string icon, string theme)
+		{
+			icon = HttpUtility.UrlEncode(icon);
+			theme = HttpUtility.UrlEncode(theme);
+
+			var url = $"https://skillicons.dev/icons?i={icon}";
+
+			if (!string.IsNullOrWhiteSpace(theme))
+				url += $"&t={theme}";
+
+			var client = _clientFactory.CreateClient("skill-icons");
+
+			var response = await client.GetAsync(url);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				entry.AbsoluteExpirationRelativeToNow = TimeSpan.Zero;
+				return [];
+			}
+
+			return await response.Content.ReadAsByteArrayAsync();
+		}
+
+		private static string GetCacheKey(string icon, string theme) => $"{CACHE_KEY_PREFIX}{icon}-{theme}";
 	}
 }

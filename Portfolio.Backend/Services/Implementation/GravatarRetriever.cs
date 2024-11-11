@@ -14,29 +14,36 @@ namespace Portfolio.Backend.Services.Implementation
 
 		const string CACHE_KEY_PREFIX = "user-gravatar-";
 
-		public async Task<byte[]> Get(string email, uint size)
+		public async Task<byte[]> Get(string email, uint size, bool forceFetch = false)
 		{
-			return await _cache.GetOrCreateAsync(GetCacheKey(email, size), async entry =>
+			if (forceFetch)
 			{
-				var emailHash = SHA256.HashData(Encoding.UTF8.GetBytes(email));
+				_cache.Remove(GetCacheKey(email, size));
+			}
 
-				var hashString = Convert.ToHexString(emailHash).ToLower();
-
-				// d=retro to get a retro default image
-				var url = $"https://www.gravatar.com/avatar/{hashString}?d=retro&s={size}";
-				var response = await _clientFactory.CreateClient("gravatar").GetAsync(url);
-
-				if (!response.IsSuccessStatusCode)
-				{
-					entry.AbsoluteExpirationRelativeToNow = TimeSpan.Zero;
-					return [];
-				}
-
-				return await response.Content.ReadAsByteArrayAsync();
-			}, new()
+			return await _cache.GetOrCreateAsync(GetCacheKey(email, size), entry => Fetch(entry, email, size), new()
 			{
 				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(CacheOptions.GravatarCacheHours),
 			}) ?? []; // return empty array if cache is null
+		}
+
+		private async Task<byte[]> Fetch(ICacheEntry entry, string email, uint size)
+		{
+			var emailHash = SHA256.HashData(Encoding.UTF8.GetBytes(email));
+
+			var hashString = Convert.ToHexString(emailHash).ToLower();
+
+			// d=retro to get a retro default image
+			var url = $"https://www.gravatar.com/avatar/{hashString}?d=retro&s={size}";
+			var response = await _clientFactory.CreateClient("gravatar").GetAsync(url);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				entry.AbsoluteExpirationRelativeToNow = TimeSpan.Zero;
+				return [];
+			}
+
+			return await response.Content.ReadAsByteArrayAsync();
 		}
 
 		private static string GetCacheKey(string email, uint size) => $"{CACHE_KEY_PREFIX}{email}@{size}px";

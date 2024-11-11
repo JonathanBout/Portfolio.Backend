@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Octokit.GraphQL;
 using Portfolio.Backend.Configuration;
 using Portfolio.Backend.Extensions;
+using Portfolio.Backend.Health;
 using Portfolio.Backend.Services;
 using Portfolio.Backend.Services.Implementation;
 using System.Diagnostics;
@@ -83,20 +86,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 		options.AddRefreshTokenValidator();
 	});
 
+builder.Services.AddHealthChecks()
+	.AddNpgSql(sp => sp.GetRequiredService<DatabaseContext>().Database.GetDbConnection().ConnectionString, tags: [HealthCheckerTags.Database])
+	.AddCheck<GitHubHealth>("GitHub", HealthStatus.Degraded, [HealthCheckerTags.ThirdParty], TimeSpan.FromSeconds(2))
+	.AddCheck<GravatarHealth>("Gravatar", HealthStatus.Degraded, [HealthCheckerTags.ThirdParty, HealthCheckerTags.ImageService], TimeSpan.FromSeconds(2))
+	.AddCheck<SkillIconsHealth>("Skill Icons", HealthStatus.Degraded, [HealthCheckerTags.ThirdParty, HealthCheckerTags.ImageService], TimeSpan.FromSeconds(2));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.Use(async (ctx, next) =>
 {
-	var ts = Stopwatch.GetTimestamp();
+	var timing = new Timing();
 
-	await next();
-
-	var elapsed = Stopwatch.GetElapsedTime(ts);
+	using (timing.Time())
+	{
+		await next();
+	}
 
 	var logger = ctx.RequestServices.GetRequiredService<ILogger<Program>>();
 
-	logger.LogInformation("Request '{method}' to '{path}' from host '{host}' took {time}ms", ctx.Request.Method, ctx.Request.Path, ctx.Request.Headers.Origin, elapsed.TotalMilliseconds);
+	logger.LogInformation("Request '{method}' to '{path}' from host '{host}' took {time}ms", ctx.Request.Method, ctx.Request.Path, ctx.Request.Headers.Origin, timing.Duration.TotalMilliseconds);
 });
 
 app.UseCors(cors =>
@@ -114,6 +124,8 @@ app.UseCors(cors =>
 app.UseAuthorization();
 app.UseResponseCaching();
 app.MapControllers();
+
+app.AddHealthChecks();
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
