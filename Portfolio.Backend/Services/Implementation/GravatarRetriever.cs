@@ -8,15 +8,15 @@ namespace Portfolio.Backend.Services.Implementation
 {
 	public class GravatarRetriever(IHttpClientFactory clientFactory, IMemoryCache cache, IOptionsMonitor<CacheConfiguration> cacheOptions) : IGravatarRetriever
 	{
-		private readonly IHttpClientFactory _clientFactory = clientFactory;
 		private readonly IMemoryCache _cache = cache;
+		private readonly IHttpClientFactory _clientFactory = clientFactory;
 		private CacheConfiguration CacheOptions => cacheOptions.CurrentValue;
 
 		const string CACHE_KEY_PREFIX = "user-gravatar-";
 
 		public async Task<byte[]> Get(string email, uint size)
 		{
-			return await _cache.GetOrCreateAsync(GetCacheKey(email, size), async _ =>
+			return await _cache.GetOrCreateAsync(GetCacheKey(email, size), async entry =>
 			{
 				var emailHash = SHA256.HashData(Encoding.UTF8.GetBytes(email));
 
@@ -26,10 +26,16 @@ namespace Portfolio.Backend.Services.Implementation
 				var url = $"https://www.gravatar.com/avatar/{hashString}?d=retro&s={size}";
 				var response = await _clientFactory.CreateClient("gravatar").GetAsync(url);
 
+				if (!response.IsSuccessStatusCode)
+				{
+					entry.AbsoluteExpirationRelativeToNow = TimeSpan.Zero;
+					return [];
+				}
+
 				return await response.Content.ReadAsByteArrayAsync();
 			}, new()
 			{
-				AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(CacheOptions.GravatarCacheHours)
+				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(CacheOptions.GravatarCacheHours),
 			}) ?? []; // return empty array if cache is null
 		}
 

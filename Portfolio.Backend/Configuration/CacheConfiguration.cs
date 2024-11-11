@@ -8,5 +8,7 @@ namespace Portfolio.Backend.Configuration
 		public int GravatarCacheHours { get; set; } = 12;
 		[Range(1, int.MaxValue)]
 		public int TopLanguagesCacheHours { get; set; } = 8;
+		[Range(1, int.MaxValue)]
+		public int SkillIconsCacheHours { get; set; } = 48;
 	}
 }
