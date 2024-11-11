@@ -1,0 +1,11 @@
+meta {
+  name: Clear Cache
+  type: http
+  seq: 1
+}
+
+delete {
+  url: {{base}}/application/cache
+  body: none
+  auth: inherit
+}
