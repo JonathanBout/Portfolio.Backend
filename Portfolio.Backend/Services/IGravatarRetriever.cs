@@ -2,6 +2,6 @@
 {
 	public interface IGravatarRetriever
 	{
-		public Task<byte[]> Get(string email, uint size);
+		public Task<byte[]> Get(string email, uint size, bool forceFetch = false);
 	}
 }

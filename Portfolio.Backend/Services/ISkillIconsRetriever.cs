@@ -2,6 +2,6 @@
 {
 	public interface ISkillIconsRetriever
 	{
-		Task<byte[]> Get(string icon, string theme);
+		Task<byte[]> Get(string icon, string theme, bool forceFetch = false);
 	}
 }
