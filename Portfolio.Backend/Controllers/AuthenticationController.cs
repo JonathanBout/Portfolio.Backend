@@ -94,7 +94,7 @@ namespace Portfolio.Backend.Controllers
 				SameSite = SameSiteMode.None,
 				Path = "/api/auth/refresh;/api/auth/logout",
 				IsEssential = true,
-				MaxAge = expiration - DateTimeOffset.Now
+				MaxAge = expiration - DateTimeOffset.Now,
 			});
 		}
 

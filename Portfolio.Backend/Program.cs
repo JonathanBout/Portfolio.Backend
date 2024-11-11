@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Hybrid;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Octokit.GraphQL;
 using Portfolio.Backend.Configuration;
@@ -23,7 +21,11 @@ builder.Services.AddMemoryCache();
 
 builder.Services.AddResponseCaching();
 
-builder.Services.AddHttpClient("gravatar");
+builder.Services
+	.AddHttpClient("gravatar");
+
+builder.Services
+	.AddHttpClient("skill-icons");
 
 builder.Services.AddOptionsWithValidateOnStart<GitHubConfiguration>()
 	.BindConfiguration("GitHub");
@@ -46,12 +48,15 @@ builder.Services.AddScoped<IConnection>(sp =>
 	return new Connection(new ProductHeaderValue("portfolio-backend"), creds);
 });
 
+builder.Services.AddTransient<IResetPasswordEmailProvider, ResetPasswordEmailProvider>();
+
 builder.Services.AddScoped<ICryptoHelper, CryptoHelper>();
 builder.Services.AddScoped<IEmailer, EmailSender>();
-builder.Services.AddTransient<IResetPasswordEmailProvider, ResetPasswordEmailProvider>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticator, AuthenticationManager>();
+
 builder.Services.AddSingleton<IGravatarRetriever, GravatarRetriever>();
+builder.Services.AddSingleton<ISkillIconsRetriever, SkillIconsRetriever>();
 
 builder.Services.AddDbContext<DatabaseContext>(options =>
 {
