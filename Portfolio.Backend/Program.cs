@@ -27,6 +27,18 @@ builder.Services.AddMemoryCache(options =>
 
 builder.Services.AddResponseCaching();
 
+builder.Services.AddOutputCache(options =>
+{
+	options.DefaultExpirationTimeSpan = TimeSpan.FromSeconds(180);
+	options.AddPolicy("health-checks", builder =>
+	{
+		builder.Cache()
+			.Expire(TimeSpan.FromSeconds(90))
+			.SetVaryByQuery("simple")
+			.SetCacheKeyPrefix("health-check");
+	});
+});
+
 builder.Services
 	.AddHttpClient("gravatar");
 
@@ -126,6 +138,7 @@ app.UseCors(cors =>
 
 app.UseAuthorization();
 app.UseResponseCaching();
+app.UseOutputCache();
 app.MapControllers();
 
 app.AddHealthChecks();
