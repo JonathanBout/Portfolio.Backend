@@ -10,8 +10,9 @@ namespace Portfolio.Backend.Extensions
 	{
 		public static WebApplication AddHealthChecks(this WebApplication app)
 		{
+			var healthGroup = app.MapGroup("/api/_health");
 			// Health check for all services.
-			app.MapHealthChecks("/api/_health", new HealthCheckOptions
+			healthGroup.MapHealthChecks("", new HealthCheckOptions
 			{
 				AllowCachingResponses = true,
 				ResultStatusCodes =
@@ -24,9 +25,9 @@ namespace Portfolio.Backend.Extensions
 			});
 
 			// Health check for services we manage ourselves.
-			app.MapHealthChecks("/api/_health/first-party", new HealthCheckOptions
+			healthGroup.MapHealthChecks("first-party", new HealthCheckOptions
 			{
-				AllowCachingResponses = false,
+				AllowCachingResponses = true,
 				Predicate = (check) => !check.Tags.Contains(HealthCheckerTags.ThirdParty),
 				ResultStatusCodes =
 				{
@@ -36,6 +37,8 @@ namespace Portfolio.Backend.Extensions
 				},
 				ResponseWriter = WriteResponse
 			});
+
+			healthGroup.CacheOutput("health-checks");
 
 			return app;
 		}
