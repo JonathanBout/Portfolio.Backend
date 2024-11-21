@@ -7,7 +7,7 @@ namespace Portfolio.Backend.Controllers
 {
 	[ApiController]
 	[Route("api/application")]
-	[Authorize]
+	//[Authorize]
 	public class ApplicationController : ControllerBase
 	{
 		[HttpGet("cache")]
@@ -17,6 +17,7 @@ namespace Portfolio.Backend.Controllers
 		}
 
 		[HttpDelete("cache")]
+		[HttpGet("cache/del")]
 		public Results<Ok, StatusCodeHttpResult, UnauthorizedHttpResult> Clear(IMemoryCache cache, ILogger<ApplicationController> logger)
 		{
 			if (cache is MemoryCache mc)

@@ -45,10 +45,15 @@ namespace Portfolio.Backend.Services.Implementation
 			if (!response.IsSuccessStatusCode)
 			{
 				entry.AbsoluteExpirationRelativeToNow = TimeSpan.Zero;
+
+				entry.SetSize(0);
+
 				return [];
 			}
 
-			return await response.Content.ReadAsByteArrayAsync();
+			var bytes = await response.Content.ReadAsByteArrayAsync();
+			entry.SetSize(bytes.LongLength);
+			return bytes;
 		}
 
 		private static string GetCacheKey(string icon, string theme) => $"{CACHE_KEY_PREFIX}{icon}-{theme}";

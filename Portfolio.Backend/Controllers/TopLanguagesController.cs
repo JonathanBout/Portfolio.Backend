@@ -28,7 +28,7 @@ namespace Portfolio.Backend.Controllers
 		[ResponseCache(Duration = 8 * HOUR, Location = ResponseCacheLocation.Any, VaryByQueryKeys = ["exclude_langs"])]
 		public async Task<Results<Ok<Dictionary<string, LanguageResult>>, BadGateway>> GetTopLanguagesGraphQL([FromServices] IConnection gh, [FromServices] IMemoryCache cache, [FromQuery(Name = "exclude_langs")] string excludeLangs = "")
 		{
-			var result = await cache.GetOrCreateAsync(TOP_LANGUAGES_CACHE_KEY, async _ =>
+			var result = await cache.GetOrCreateAsync(TOP_LANGUAGES_CACHE_KEY, async entry =>
 			{
 #pragma warning disable CS9236 // Compiling requires binding the lambda expression many times. Consider declaring the lambda expression with explicit parameter types, or if the containing method call is generic, consider using explicit type arguments.
 				var query = new Query()
@@ -51,7 +51,17 @@ namespace Portfolio.Backend.Controllers
 					});
 #pragma warning restore CS9236
 
-				return (await gh.Run(query)).ToList();
+				var result = (await gh.Run(query)).ToList();
+
+				long size = result.Aggregate(0L, (acc, cur) => acc
+							+ cur.Name.Length * 2
+							+ cur.Languages.Aggregate(0L, (acc, cur) => acc
+									+ sizeof(int) // for field cur.Size
+									+ (cur.Node.Color.Length + cur.Node.Name.Length) * 2));
+
+				entry.SetSize(size);
+
+				return result;
 			}, new MemoryCacheEntryOptions
 			{
 				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(_cacheOptions.TopLanguagesCacheHours),

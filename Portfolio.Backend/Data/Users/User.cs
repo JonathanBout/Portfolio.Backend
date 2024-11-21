@@ -15,6 +15,7 @@ namespace Portfolio.Backend.Data.Users
 		/// The profile image of the user. If null, the system will try to use the user's Gravatar.
 		/// </summary>
 		public byte[]? ProfileImage { get; set; } = null;
+		public string? ProfileImageFormat { get; set; } = null;
 
 		private string _email = "";
 
