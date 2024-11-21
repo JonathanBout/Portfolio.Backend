@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Octokit.GraphQL;
@@ -10,6 +12,7 @@ using Portfolio.Backend.Configuration;
 using Portfolio.Backend.Extensions;
 using Portfolio.Backend.Health;
 using Portfolio.Backend.Services;
+using Portfolio.Backend.Services.Caching;
 using Portfolio.Backend.Services.Implementation;
 using System.Diagnostics;
 using System.Text;
@@ -20,9 +23,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+builder.Services.AddSingleton<MemoryCacheWrapper>();
+
+builder.Services.AddSingleton<IMemoryCache>(sp => sp.GetRequiredService<MemoryCacheWrapper>());
+builder.Services.AddSingleton<IOutputCacheStore>(sp => sp.GetRequiredService<MemoryCacheWrapper>());
+
 builder.Services.AddMemoryCache(options =>
 {
 	options.TrackStatistics = true;
+	options.SizeLimit = 100_000_000;
 });
 
 builder.Services.AddResponseCaching();
@@ -107,21 +116,22 @@ builder.Services.AddHealthChecks()
 	.AddCheck<GravatarHealth>("Gravatar", HealthStatus.Degraded, [HealthCheckerTags.ThirdParty, HealthCheckerTags.ImageService], TimeSpan.FromSeconds(2))
 	.AddCheck<SkillIconsHealth>("Skill Icons", HealthStatus.Degraded, [HealthCheckerTags.ThirdParty, HealthCheckerTags.ImageService], TimeSpan.FromSeconds(2));
 
+builder.Logging.ClearProviders().AddSimpleConsole();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.Use(async (ctx, next) =>
 {
-	var timing = new Timing();
+	var start = Stopwatch.GetTimestamp();
 
-	using (timing.Time())
-	{
-		await next();
-	}
+	await next();
+
+	var elapsed = Stopwatch.GetElapsedTime(start);
 
 	var logger = ctx.RequestServices.GetRequiredService<ILogger<Program>>();
 
-	logger.LogInformation("Request '{method}' to '{path}' from host '{host}' took {time}ms", ctx.Request.Method, ctx.Request.Path, ctx.Request.Headers.Origin, timing.Duration.TotalMilliseconds);
+	logger.LogInformation("Request '{method}' to '{path}' from host '{host}' took {time}ms", ctx.Request.Method, ctx.Request.Path, ctx.Request.Headers.Origin, elapsed.TotalMilliseconds);
 });
 
 app.UseCors(cors =>

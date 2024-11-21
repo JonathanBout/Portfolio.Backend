@@ -43,7 +43,11 @@ namespace Portfolio.Backend.Services.Implementation
 				return [];
 			}
 
-			return await response.Content.ReadAsByteArrayAsync();
+			var bytes = await response.Content.ReadAsByteArrayAsync();
+
+			entry.SetSize(bytes.Length);
+
+			return bytes;
 		}
 
 		private static string GetCacheKey(string email, uint size) => $"{CACHE_KEY_PREFIX}{email}@{size}px";

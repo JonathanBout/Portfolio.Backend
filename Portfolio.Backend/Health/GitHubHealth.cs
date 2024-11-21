@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using Octokit.GraphQL;
 using Portfolio.Backend.Configuration;
+using System.Diagnostics;
 
 namespace Portfolio.Backend.Health
 {
@@ -12,25 +13,25 @@ namespace Portfolio.Backend.Health
 
 		public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
 		{
-			var timing = new Timing();
+			var start = Stopwatch.GetTimestamp();
 
-			using (timing.Time())
+			try
 			{
-				try
-				{
-					var health = await _gitHub.Run(new Query().User("JonathanBout").Status.Select(s => new { s.Message }), cancellationToken: cancellationToken);
+				var health = await _gitHub.Run(new Query().User("JonathanBout").Status.Select(s => new { s.Message }), cancellationToken: cancellationToken);
 
-				} catch (Exception e)
-				{
-					return HealthCheckResult.Unhealthy("Failed to connect to GitHub", e);
-				}
+			} catch (Exception e)
+			{
+				return HealthCheckResult.Unhealthy("Failed to connect to GitHub", e);
 			}
 
-			var diff = _config.MaxHealthyDurationMilliseconds - timing.Duration.TotalMilliseconds;
+
+			var elapsed = Stopwatch.GetElapsedTime(start);
+
+			var diff = _config.MaxHealthyDurationMilliseconds - elapsed.TotalMilliseconds;
 
 			if (diff < 0)
 			{
-				return HealthCheckResult.Degraded($"SkillIcons request took {timing.Duration.TotalMilliseconds}ms, {-diff}ms more than acceptable.");
+				return HealthCheckResult.Degraded($"GitHub request took {elapsed.TotalMilliseconds}ms, {-diff}ms more than acceptable.");
 			}
 
 			return HealthCheckResult.Healthy();

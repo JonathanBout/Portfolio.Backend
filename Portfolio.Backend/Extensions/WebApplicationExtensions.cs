@@ -38,6 +38,12 @@ namespace Portfolio.Backend.Extensions
 				ResponseWriter = WriteResponse
 			});
 
+			healthGroup.MapHealthChecks("self", new HealthCheckOptions
+			{
+				AllowCachingResponses = true,
+				Predicate = _ => false
+			});
+
 			healthGroup.CacheOutput("health-checks");
 
 			return app;

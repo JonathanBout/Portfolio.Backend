@@ -57,11 +57,45 @@ namespace Portfolio.Backend.Controllers
 		}
 
 		[HttpPut("me/image")]
-		public Results<Ok, BadRequest> UpdateMeImage([FromBody] byte[] image)
+		public Results<Ok, BadRequest> UpdateMeImage([FromForm] IFormFile image)
 		{
 			var user = HttpContext.GetCurrentUser()!;
-			user.ProfileImage = image;
-			_userService.UpdateUser(user);
+
+			var parts = image.ContentType.Split("/", 2);
+
+			if (parts.Length < 2 || parts[0] != "image")
+			{
+				return TypedResults.BadRequest();
+			}
+
+			string newMediaType;
+
+			switch (parts[1].ToLower())
+			{
+				case "png":
+					newMediaType = MediaTypeNames.Image.Png;
+					break;
+				case "jpg" or "jpeg":
+					newMediaType = MediaTypeNames.Image.Jpeg;
+					break;
+				case "webp":
+					newMediaType = MediaTypeNames.Image.Webp;
+					break;
+				default:
+					return TypedResults.BadRequest();
+			}
+
+			user.ProfileImageFormat = newMediaType;
+
+			using var stream = image.OpenReadStream();
+
+			var imageBytes = new byte[stream.Length];
+			var imageSpan = imageBytes.AsSpan();
+
+			stream.ReadExactly(imageSpan);
+
+			user.ProfileImage = imageBytes;
+
 			return TypedResults.Ok();
 		}
 
@@ -98,10 +132,10 @@ namespace Portfolio.Backend.Controllers
 
 			if (user.ProfileImage is null)
 			{
-				return TypedResults.File(await gravatar.Get(user.Email, size));
+				return TypedResults.File(await gravatar.Get(user.Email, size), MediaTypeNames.Image.Jpeg);
 			}
 
-			return TypedResults.File(user.ProfileImage);
+			return TypedResults.File(user.ProfileImage, user.ProfileImageFormat);
 		}
 
 		public record UserResponse(string Email, string FullName, string Description)

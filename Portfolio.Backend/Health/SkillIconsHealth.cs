@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using Portfolio.Backend.Configuration;
 using Portfolio.Backend.Services;
+using System.Diagnostics;
 
 namespace Portfolio.Backend.Health
 {
@@ -11,24 +12,23 @@ namespace Portfolio.Backend.Health
 		private readonly HealthConfiguration _config = options.Value;
 		public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
 		{
-			var timing = new Timing();
-
-			using (timing.Time())
+			var start = Stopwatch.GetTimestamp();
+			try
 			{
-				try
-				{
-					var health = await _retriever.Get("cs", "light", true);
-				} catch (Exception e)
-				{
-					return HealthCheckResult.Unhealthy("Failed to connect to SkillIcons", e);
-				}
+				var health = await _retriever.Get("cs", "light", true);
+			} catch (Exception e)
+			{
+				return HealthCheckResult.Unhealthy("Failed to connect to SkillIcons", e);
 			}
 
-			var diff = _config.MaxHealthyDurationMilliseconds - timing.Duration.TotalMilliseconds;
+
+			var elapsed = Stopwatch.GetElapsedTime(start);
+
+			var diff = _config.MaxHealthyDurationMilliseconds - elapsed.TotalMilliseconds;
 
 			if (diff < 0)
 			{
-				return HealthCheckResult.Degraded($"SkillIcons request took {timing.Duration.TotalMilliseconds}ms, {-diff}ms more than acceptable.");
+				return HealthCheckResult.Degraded($"SkillIcons request took {elapsed.TotalMilliseconds}ms, {-diff}ms more than acceptable.");
 			}
 
 			return HealthCheckResult.Healthy();
