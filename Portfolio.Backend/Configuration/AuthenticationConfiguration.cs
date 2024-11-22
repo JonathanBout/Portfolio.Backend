@@ -4,8 +4,17 @@ namespace Portfolio.Backend.Configuration
 {
 	public class AuthenticationConfiguration
 	{
-		[Required]
-		public string Secret { get; set; } = null!;
+		public string? Secret { get; set; } = null!;
+		public string? SecretFilePath { get; set; } = null!;
+
+		public string GetSecret()
+		{
+			if (Secret is not null) return Secret;
+			if (SecretFilePath is not null) return File.ReadAllText(SecretFilePath);
+
+			throw new InvalidOperationException("Either Secret or SecretFilePath should be configured.");
+		}
+
 		[Required]
 		public string Issuer { get; set; } = null!;
 		[Required]

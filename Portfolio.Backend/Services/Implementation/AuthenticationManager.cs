@@ -117,7 +117,7 @@ namespace Portfolio.Backend.Services.Implementation
 				],
 				// The expiration date is the minimum of the access token expiration and the refresh token expiration
 				expires: new DateTime(long.Min(AccessTokenExpiration.Ticks, token.ExpirationDate.Ticks)),
-				signingCredentials: new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationConfig.Secret)), SecurityAlgorithms.HmacSha256)
+				signingCredentials: new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationConfig.GetSecret())), SecurityAlgorithms.HmacSha256)
 			);
 
 			// encrypt and write the accessToken

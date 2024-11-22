@@ -100,9 +100,11 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 	.AddJwtBearer(options =>
 	{
-		options.TokenValidationParameters.ValidIssuer = builder.Configuration["Auth:Issuer"];
-		options.TokenValidationParameters.ValidAudience = builder.Configuration["Auth:Audience"];
-		options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Auth:Secret"] ?? ""));
+		var authConfig = builder.Configuration.GetRequiredSection("Auth").Get<AuthenticationConfiguration>()!;
+
+		options.TokenValidationParameters.ValidIssuer = authConfig.Issuer;
+		options.TokenValidationParameters.ValidAudience = authConfig.Audience;
+		options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authConfig.GetSecret()));
 
 		options.TokenValidationParameters.ValidateIssuer = true;
 		options.TokenValidationParameters.ValidateAudience = true;
@@ -120,6 +122,11 @@ builder.Logging.ClearProviders().AddSimpleConsole();
 
 var app = builder.Build();
 
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+	ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+});
+
 // Configure the HTTP request pipeline.
 app.Use(async (ctx, next) =>
 {
@@ -131,7 +138,7 @@ app.Use(async (ctx, next) =>
 
 	var logger = ctx.RequestServices.GetRequiredService<ILogger<Program>>();
 
-	logger.LogInformation("Request '{method}' to '{path}' from host '{host}' took {time}ms", ctx.Request.Method, ctx.Request.Path, ctx.Request.Headers.Origin, elapsed.TotalMilliseconds);
+	logger.LogInformation("Request '{method}' to '{path}' from host '{host}' took {time}ms", ctx.Request.Method, ctx.Request.Path, ctx.Request.Headers.Host, elapsed.TotalMilliseconds);
 });
 
 app.UseCors(cors =>
@@ -152,12 +159,6 @@ app.UseOutputCache();
 app.MapControllers();
 
 app.AddHealthChecks();
-
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-	ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
-});
-
 
 using (var scope = app.Services.CreateScope())
 {
