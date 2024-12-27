@@ -1,15 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Formatters;
 using Portfolio.Backend.Data.Users;
 using Portfolio.Backend.Extensions;
 using Portfolio.Backend.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Net.Mime;
-using System.Runtime.Intrinsics.Arm;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Portfolio.Backend.Controllers
 {
@@ -28,7 +24,6 @@ namespace Portfolio.Backend.Controllers
 			var user = HttpContext.GetCurrentUser()!;
 			return TypedResults.Ok(UserResponse.FromUser(user));
 		}
-
 
 		[HttpPatch("me")]
 		public Results<Ok<UserResponse>, BadRequest> UpdateMe([FromBody] UpdateUserRequest request)
@@ -132,7 +127,7 @@ namespace Portfolio.Backend.Controllers
 
 			if (user.ProfileImage is null)
 			{
-				return TypedResults.File(await gravatar.Get(user.Email, size), MediaTypeNames.Image.Jpeg);
+				return TypedResults.File(await gravatar.Get(new(user.Email, size)) ?? [], MediaTypeNames.Image.Jpeg);
 			}
 
 			return TypedResults.File(user.ProfileImage, user.ProfileImageFormat);

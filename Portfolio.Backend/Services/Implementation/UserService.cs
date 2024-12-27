@@ -12,6 +12,6 @@ namespace Portfolio.Backend.Services.Implementation
 		{
 			_database.Users.Update(user);
 			return _database.SaveChanges() > 0;
-		} 
+		}
 	}
 }

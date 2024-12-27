@@ -63,7 +63,7 @@ namespace Portfolio.Backend.Services.Implementation
 			{
 				return new SmtpClient(_emailConfiguration.CurrentValue.SmtpServer, _emailConfiguration.CurrentValue.Port)
 				{
-					Credentials = new NetworkCredential(_emailConfiguration.CurrentValue.Username, _emailConfiguration.CurrentValue.Password),
+					Credentials = new NetworkCredential(_emailConfiguration.CurrentValue.Username, _emailConfiguration.CurrentValue.GetPassword()),
 					EnableSsl = _emailConfiguration.CurrentValue.UseSSL,
 				};
 			}

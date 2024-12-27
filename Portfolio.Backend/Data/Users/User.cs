@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Portfolio.Backend.Extensions;
-
-namespace Portfolio.Backend.Data.Users
+﻿namespace Portfolio.Backend.Data.Users
 {
 	public class User
 	{

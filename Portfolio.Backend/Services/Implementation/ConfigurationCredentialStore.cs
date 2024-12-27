@@ -10,7 +10,7 @@ namespace Portfolio.Backend.Services.Implementation
 
 		public Task<string> GetCredentials(CancellationToken cancellationToken = default)
 		{
-			return Task.FromResult(Config.AccessToken);
+			return Task.FromResult(Config.GetAccessToken());
 		}
 	}
 }

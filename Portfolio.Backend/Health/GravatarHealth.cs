@@ -11,19 +11,16 @@ namespace Portfolio.Backend.Health
 		private readonly IGravatarRetriever _retriever = retriever;
 		private readonly HealthConfiguration _config = options.Value;
 
-
 		public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
 		{
 			var start = Stopwatch.GetTimestamp();
 			try
 			{
-				var health = await _retriever.Get("user@example.com", 5, true); // fetch tiny 5x5 px image to reduce overhead
-
+				var health = await _retriever.Get(new("user@example.com", 5), true); // fetch tiny 5x5 px image to reduce overhead
 			} catch (Exception e)
 			{
 				return HealthCheckResult.Unhealthy("Failed to connect to SkillIcons", e);
 			}
-
 
 			var elapsed = Stopwatch.GetElapsedTime(start);
 

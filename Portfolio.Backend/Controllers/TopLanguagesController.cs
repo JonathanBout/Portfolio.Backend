@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Octokit.GraphQL;
@@ -53,6 +51,7 @@ namespace Portfolio.Backend.Controllers
 
 				var result = (await gh.Run(query)).ToList();
 
+				// calculate size of the cache entry
 				long size = result.Aggregate(0L, (acc, cur) => acc
 							+ cur.Name.Length * 2
 							+ cur.Languages.Aggregate(0L, (acc, cur) => acc

@@ -1,8 +1,6 @@
-﻿using Castle.Components.DictionaryAdapter.Xml;
-using Microsoft.AspNetCore.OutputCaching;
+﻿using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using Octokit.GraphQL.Model;
 
 namespace Portfolio.Backend.Services.Caching
 {

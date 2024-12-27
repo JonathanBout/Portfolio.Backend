@@ -1,35 +1,23 @@
 ﻿
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using Octokit.GraphQL.Model;
 using Portfolio.Backend.Configuration;
+using Portfolio.Backend.Services.Caching;
 using System.Web;
 
 namespace Portfolio.Backend.Services.Implementation
 {
-	public class SkillIconsRetriever(IMemoryCache cache, IHttpClientFactory clientFactory, IOptionsMonitor<CacheConfiguration> cacheOptions) : ISkillIconsRetriever
+	using static ISkillIconsRetriever;
+	public class SkillIconsRetriever(IMemoryCache cache, IHttpClientFactory clientFactory, IOptionsMonitor<CacheConfiguration> cacheOptions)
+		: CacheServiceOutput<RetrieveModel, byte[]>(cache), ISkillIconsRetriever
 	{
-		private readonly IMemoryCache _cache = cache;
 		private readonly IHttpClientFactory _clientFactory = clientFactory;
-		private CacheConfiguration CacheOptions => cacheOptions.CurrentValue;
+		protected override TimeSpan EntryExpiration => TimeSpan.FromHours(cacheOptions.CurrentValue.SkillIconsCacheHours);
 
-		const string CACHE_KEY_PREFIX = "skill-icon-";
-
-		public async Task<byte[]> Get(string icon, string theme, bool forceFetch = false)
+		protected override async Task<byte[]?> Fetch(ICacheEntry entry, RetrieveModel model)
 		{
-			if (forceFetch)
-			{
-				_cache.Remove(GetCacheKey(icon, theme));
-			}
+			var (icon, theme) = (model.Icon, model.Theme);
 
-			return await _cache.GetOrCreateAsync(GetCacheKey(icon, theme), entry => Fetch(entry, icon, theme), new()
-			{
-				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(CacheOptions.SkillIconsCacheHours)
-			}) ?? [];
-		}
-
-		private async Task<byte[]> Fetch(ICacheEntry entry, string icon, string theme)
-		{
 			icon = HttpUtility.UrlEncode(icon);
 			theme = HttpUtility.UrlEncode(theme);
 
@@ -56,6 +44,6 @@ namespace Portfolio.Backend.Services.Implementation
 			return bytes;
 		}
 
-		private static string GetCacheKey(string icon, string theme) => $"{CACHE_KEY_PREFIX}{icon}-{theme}";
+		protected override string GetCacheKey(RetrieveModel model) => $"{model.Icon}-{model.Theme}";
 	}
 }

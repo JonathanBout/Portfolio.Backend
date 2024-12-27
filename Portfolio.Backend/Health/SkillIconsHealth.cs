@@ -15,12 +15,11 @@ namespace Portfolio.Backend.Health
 			var start = Stopwatch.GetTimestamp();
 			try
 			{
-				var health = await _retriever.Get("cs", "light", true);
+				var health = await _retriever.Get(new("cs", "light"), true);
 			} catch (Exception e)
 			{
 				return HealthCheckResult.Unhealthy("Failed to connect to SkillIcons", e);
 			}
-
 
 			var elapsed = Stopwatch.GetElapsedTime(start);
 
