@@ -1,7 +1,9 @@
-﻿namespace Portfolio.Backend.Services
+﻿using Portfolio.Backend.Services.Caching;
+
+namespace Portfolio.Backend.Services
 {
-	public interface IGravatarRetriever
+	public interface IGravatarRetriever : ICacheServiceOutput<IGravatarRetriever.RetrieveModel, byte[]>
 	{
-		public Task<byte[]> Get(string email, uint size, bool forceFetch = false);
+		public record RetrieveModel(string Email, uint Size);
 	}
 }

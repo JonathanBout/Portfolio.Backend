@@ -8,7 +8,7 @@ namespace Portfolio.Backend.Controllers.CustomTypedResults
 		public Task ExecuteAsync(HttpContext httpContext)
 		{
 			httpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-			
+
 			if (_retryAfter != default)
 			{
 				httpContext.Response.Headers.Append("Retry-After", _retryAfter.TotalSeconds.ToString("F0"));

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using Portfolio.Backend.Services;
 using System.Net.Mime;
 
@@ -25,7 +24,7 @@ namespace Portfolio.Backend.Controllers
 				string v => v
 			};
 
-			var bytes = await _retriever.Get(icon, theme);
+			var bytes = await _retriever.Get(new(icon, theme));
 
 			if (bytes is { Length: > 0 })
 			{

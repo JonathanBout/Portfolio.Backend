@@ -1,7 +1,9 @@
-﻿namespace Portfolio.Backend.Services
+﻿using Portfolio.Backend.Services.Caching;
+
+namespace Portfolio.Backend.Services
 {
-	public interface ISkillIconsRetriever
+	public interface ISkillIconsRetriever : ICacheServiceOutput<ISkillIconsRetriever.RetrieveModel, byte[]>
 	{
-		Task<byte[]> Get(string icon, string theme, bool forceFetch = false);
+		public record RetrieveModel(string Icon, string Theme);
 	}
 }
