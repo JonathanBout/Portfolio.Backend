@@ -4,8 +4,8 @@ namespace Portfolio.Backend.Configuration
 {
 	public class AuthenticationConfiguration
 	{
-		public string? Secret { get; set; } = null!;
-		public string? SecretFilePath { get; set; } = null!;
+		public string? Secret { get; set; }
+		public string? SecretFilePath { get; set; }
 
 		public string GetSecret()
 		{
