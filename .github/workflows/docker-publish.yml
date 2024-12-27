@@ -33,15 +33,15 @@ jobs:
       - name: Install dependencies
         run: dotnet restore Portfolio.Backend.sln
       - name: Build
-        run: dotnet build Portfolio.Backend.sln  --no-restore
+        run: dotnet build Portfolio.Backend.sln --no-restore -p:TreatWarningsAsErrors=true
       - name: Test
-        run: dotnet test Portfolio.Backend.Tests/Portfolio.Backend.Tests.csproj --no-restore
+        run: dotnet test Portfolio.Backend.Tests/Portfolio.Backend.Tests.csproj --no-restore -p:TreatWarningsAsErrors=true
 
   build:
   # only run when building for production
     if: github.event_name != 'pull_request' # can't use env here for some reason
     needs: 
-        - test
+        - test # require tests to pass before publishing
     # runs-on: ${{ env.IS_PRODUCTION_BUILD && 'buildjet-2vcpu-ubuntu-2204-arm' || 'ubuntu-latest' }}
     runs-on: buildjet-2vcpu-ubuntu-2204-arm
     permissions:
