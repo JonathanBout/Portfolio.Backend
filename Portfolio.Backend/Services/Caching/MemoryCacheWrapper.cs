@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
 
 namespace Portfolio.Backend.Services.Caching
 {
@@ -10,9 +11,9 @@ namespace Portfolio.Backend.Services.Caching
 		private readonly ILogger<MemoryCacheWrapper> _logger = logger.CreateLogger<MemoryCacheWrapper>();
 		private readonly IOptions<MemoryCacheOptions> _options = options;
 
-		private readonly Dictionary<string, ICacheEntry> _entriesByTag = [];
+		private readonly ConcurrentDictionary<string, ICacheEntry> _entriesByTag = [];
 
-		private readonly Dictionary<object, (int hits, int misses)> _statsByKey = [];
+		private readonly ConcurrentDictionary<object, (int hits, int misses)> _statsByKey = [];
 
 		public ICacheEntry CreateEntry(object key)
 		{
@@ -85,7 +86,7 @@ namespace Portfolio.Backend.Services.Caching
 
 			foreach (var (k, _) in byTag)
 			{
-				_entriesByTag.Remove(k);
+				_entriesByTag.TryRemove(k, out _);
 			}
 		}
 
