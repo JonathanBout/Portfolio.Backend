@@ -10,6 +10,7 @@ on:
     branches: [ "release" ]
     tags: [ "v*.*.*" ]
   pull_request:
+  workflow_dispatch:
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -92,10 +93,12 @@ jobs:
         with:
           context: .
           file: ./Portfolio.Backend/Dockerfile
-          push: ${{ env.IS_PRODUCTION_BUILD == 'true' }} # only push when pushing image
+          push: ${{ env.IS_PRODUCTION_BUILD == 'true' }} # only push when run on a release
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: 'linux/arm64' # only build for arm64 when pushing image, otherwise amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: 'linux/arm64'
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
