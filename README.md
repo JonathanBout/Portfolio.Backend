@@ -1,2 +1,9 @@
 # Portfolio.Backend
-This repository contains the backend for [my portfolio site](https://jonathanbout.com). Currently, all it does is loading my most used programming languages from GitHub using the GraphQL API, but I might extend it in the future.
+This repository contains the backend for [my portfolio site](https://jonathanbout.com).
+
+It currently supports:
+- Proxying requests to skillicons.dev for caching
+- Accessing GitHub stats, retrieved with the GraphQL API
+- Accessing Gravatar icons of users
+
+It also has some endpoints for JWT authentication and managing the cache.
