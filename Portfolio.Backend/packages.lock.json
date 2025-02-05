@@ -77,14 +77,14 @@
       },
       "Microsoft.EntityFrameworkCore.Proxies": {
         "type": "Direct",
-        "requested": "[9.0.0, )",
-        "resolved": "9.0.0",
-        "contentHash": "RmVnBB8YT13VP0BZrPx8aktfmcFwokUF+uo76xX8lcS7IDg72o8S7HKAyjTmlm5vEqco5DLS/4bufTNos37ayQ==",
+        "requested": "[9.0.1, )",
+        "resolved": "9.0.1",
+        "contentHash": "tCTAdaS1OPpY44R987tSQOD54Prtwaf6HPmbIjm8cq3qJ0R1w0Y/K2lWkvSIjT3U0zugKGXrbqvO0/bbYnhqHw==",
         "dependencies": {
           "Castle.Core": "5.1.1",
-          "Microsoft.EntityFrameworkCore": "9.0.0",
-          "Microsoft.Extensions.Caching.Memory": "9.0.0",
-          "Microsoft.Extensions.Logging": "9.0.0"
+          "Microsoft.EntityFrameworkCore": "9.0.1",
+          "Microsoft.Extensions.Caching.Memory": "9.0.1",
+          "Microsoft.Extensions.Logging": "9.0.1"
         }
       },
       "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": {
