@@ -85,8 +85,8 @@
       },
       "Microsoft.AspNetCore.Authentication.JwtBearer": {
         "type": "Transitive",
-        "resolved": "9.0.1",
-        "contentHash": "R/ZG9llsAOn/E8WOtg+PyLCB599lxzaIGy/NbwV1xG+smkyBF4w5/AJXNDq6tVw7/qbqvd+4xLAdWQiiVj1DXw==",
+        "resolved": "9.0.2",
+        "contentHash": "p3WhJqzvf6uuQiYpxARdC4Yr+UquZzzk7ZGun4MSufx3Mi9kmfjlU0e2MiBRHYWQdfx2HjU0ifaHJecJ7lXqug==",
         "dependencies": {
           "Microsoft.IdentityModel.Protocols.OpenIdConnect": "8.0.1"
         }
@@ -386,7 +386,7 @@
           "AspNetCore.HealthChecks.NpgSql": "[9.0.0, )",
           "EFCore.NamingConventions": "[9.0.0, )",
           "Konscious.Security.Cryptography.Argon2": "[1.3.1, )",
-          "Microsoft.AspNetCore.Authentication.JwtBearer": "[9.0.1, )",
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "[9.0.2, )",
           "Microsoft.EntityFrameworkCore": "[9.0.1, )",
           "Microsoft.EntityFrameworkCore.Proxies": "[9.0.1, )",
           "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": "[1.21.0, )",
