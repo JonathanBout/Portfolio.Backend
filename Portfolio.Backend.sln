@@ -9,11 +9,6 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Portfolio.Backend.Tests", "Portfolio.Backend.Tests\Portfolio.Backend.Tests.csproj", "{B1F25991-F78F-4A23-93D2-38AF8D648383}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub Actions", "GitHub Actions", "{3164D12D-0077-4B3B-A25E-8CB82188AD84}"
-	ProjectSection(SolutionItems) = preProject
-		.github\workflows\docker-publish.yml = .github\workflows\docker-publish.yml
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

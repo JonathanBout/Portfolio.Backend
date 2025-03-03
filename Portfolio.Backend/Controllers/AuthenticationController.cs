@@ -46,7 +46,6 @@ namespace Portfolio.Backend.Controllers
 		}
 		public record CreatedAccessTokenResponse(string AccessToken);
 
-
 		[HttpPost("login")]
 		public Results<Ok, UnauthorizedHttpResult> Login([FromBody] LoginRequest request)
 		{
@@ -171,7 +170,6 @@ namespace Portfolio.Backend.Controllers
 		}
 
 		public record ResetPasswordRequest(string Email);
-
 
 		[HttpPost("change-password")]
 		public Results<Ok, UnauthorizedHttpResult> ChangePassword(ChangePasswordRequest request)

@@ -31,16 +31,16 @@ namespace Portfolio.Backend.Controllers
 #pragma warning disable CS9236 // Compiling requires binding the lambda expression many times. Consider declaring the lambda expression with explicit parameter types, or if the containing method call is generic, consider using explicit type arguments.
 				var query = new Query()
 					.User(_config.Username)
-					.Repositories(first: 100, isFork: false, affiliations: new Arg<IEnumerable<RepositoryAffiliation?>>([RepositoryAffiliation.Owner]))
+					.Repositories(first: 100, affiliations: new Arg<IEnumerable<RepositoryAffiliation?>>([RepositoryAffiliation.Owner]), isFork: false)
 					.Nodes
-					.Select((Repository node) => new
+					.Select(node => new
 					{
 						node.Name,
 						Languages = node.Languages(10, null, null, null, new LanguageOrder { Field = LanguageOrderField.Size, Direction = OrderDirection.Desc })
-										.Select((LanguageConnection l) => l.Edges.Select((LanguageEdge e) => new
+										.Select(l => l.Edges.Select(e => new
 										{
 											e.Size,
-											Node = e.Node.Select((Language lang) => new
+											Node = e.Node.Select(lang => new
 											{
 												lang.Name,
 												lang.Color
@@ -53,10 +53,10 @@ namespace Portfolio.Backend.Controllers
 
 				// calculate size of the cache entry
 				long size = result.Aggregate(0L, (acc, cur) => acc
-							+ cur.Name.Length * 2
+							+ (cur.Name.Length * 2)
 							+ cur.Languages.Aggregate(0L, (acc, cur) => acc
 									+ sizeof(int) // for field cur.Size
-									+ (cur.Node.Color.Length + cur.Node.Name.Length) * 2));
+									+ ((cur.Node.Color.Length + cur.Node.Name.Length) * 2)));
 
 				entry.SetSize(size);
 
@@ -65,7 +65,6 @@ namespace Portfolio.Backend.Controllers
 			{
 				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(_cacheOptions.TopLanguagesCacheHours),
 			});
-
 
 			if (result is not { Count: > 0 })
 			{

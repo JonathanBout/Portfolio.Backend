@@ -15,7 +15,7 @@ namespace Portfolio.Backend.Controllers
 		const int DAY = 24 * HOUR;
 
 		[HttpGet("{icon}")]
-		[ResponseCache(Duration = 3 * DAY)]
+		[ResponseCache(Duration = 3 * DAY, VaryByQueryKeys = ["theme"])]
 		public async Task<Results<NotFound, FileContentHttpResult>> GetIcon(string icon, string theme = "")
 		{
 			icon = icon switch
