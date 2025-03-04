@@ -1,7 +1,6 @@
-﻿
-using Octokit.GraphQL.Model;
-using Portfolio.Backend.Data.Users;
+﻿using Portfolio.Backend.Data.Users;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace Portfolio.Backend.Services.Implementation
 {
@@ -21,9 +20,8 @@ namespace Portfolio.Backend.Services.Implementation
 				var db = sp.GetRequiredService<DatabaseContext>();
 				if (db.Set<RefreshToken>().Find(tokenId) is RefreshToken token)
 				{
-					var crypto = sp.GetRequiredService<ICryptoHelper>();
 					// check if the token is an old one. At most 10, as the verification is quite an expensive operation
-					foreach (var oldToken in token.HistoricalValues.OrderBy(v => v.CreationDate))
+					foreach (var oldToken in token.Values.OrderBy(v => v.CreationDate))
 					{
 						if (ct.IsCancellationRequested)
 							return Task.CompletedTask;
@@ -67,9 +65,12 @@ namespace Portfolio.Backend.Services.Implementation
 						// we want to make sure that we don't block the queue for too long.
 						// we will set a timeout based on the amount of work in the queue
 						var timeout = int.Max(10_000 / int.Max(1, _work.Count), 1000);
-
-						cts.CancelAfter(timeout);
-
+#if DEBUG
+						if (Debugger.IsAttached)
+						{
+							cts.CancelAfter(timeout);
+						}
+#endif
 						await workTask;
 					} else
 					{
@@ -83,7 +84,7 @@ namespace Portfolio.Backend.Services.Implementation
 			});
 		}
 
-		public Task StartAsync(CancellationToken cancellationToken) => Task.FromCanceled(cancellationToken);
+		public Task StartAsync(CancellationToken cancellationToken) => cancellationToken.IsCancellationRequested ? Task.FromCanceled(cancellationToken) : Task.CompletedTask;
 		public Task StopAsync(CancellationToken cancellationToken) => _backgroundServiceCts.CancelAsync();
 	}
 }

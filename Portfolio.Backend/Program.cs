@@ -81,11 +81,17 @@ builder.Services.AddScoped<IConnection>(sp =>
 builder.Services.AddSingleton<IGravatarRetriever, GravatarRetriever>();
 builder.Services.AddSingleton<ISkillIconsRetriever, SkillIconsRetriever>();
 
+// Add the cryptographic helper service
+builder.Services.AddSingleton<ICryptoHelper, CryptoHelper>();
+
+builder.Services.AddSingleton<IntruderDetector>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<IntruderDetector>());
+builder.Services.AddSingleton<IIntruderDetector>(sp => sp.GetRequiredService<IntruderDetector>());
+
 // Add the email provider which sends password reset emails
 builder.Services.AddTransient<IResetPasswordEmailProvider, ResetPasswordEmailProvider>();
 
-// Add the cryptography helper, email sender, user service and authentication manager
-builder.Services.AddScoped<ICryptoHelper, CryptoHelper>();
+// Add the email sender, user service and authentication manager
 builder.Services.AddScoped<IEmailer, EmailSender>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticator, AuthenticationManager>();

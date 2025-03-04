@@ -35,9 +35,7 @@ namespace Portfolio.Backend.Services.Implementation
 			modelBuilder.Entity<RefreshToken>(entity =>
 			{
 				entity.HasKey(e => e.Id);
-				entity.Property(e => e.ExpirationDate).IsRequired();
-				entity.Property(e => e.CreationDate).IsRequired();
-				entity.HasMany(e => e.HistoricalValues).WithOne(v => v.ReferringToken).OnDelete(DeleteBehavior.Cascade);
+				entity.HasMany(e => e.Values).WithOne(v => v.ReferringToken).OnDelete(DeleteBehavior.Cascade);
 			});
 		}
 	}

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Portfolio.Backend.Configuration;
 using Portfolio.Backend.Data.Users;
@@ -88,11 +89,11 @@ namespace Portfolio.Backend.Services.Implementation
 			// check if the refresh token exists and is not expired
 			var token = user.RefreshTokens.FirstOrDefault(t => t.Id == refreshTokenId);
 
-			if (token is not { Value: not null } || token.IsExpired())
+			if (token is not { ActiveToken: not null } || token.IsExpired())
 				return null;
 
 			// verify the tokens match
-			switch (_crypto.Verify(refreshToken, token.Value.TokenHash))
+			switch (_crypto.Verify(refreshToken, token.ActiveToken.TokenHash))
 			{
 				case VerificationResult.Failed:
 					_intruderDetector.EnqueueInvalidAccessTokenUsage(refreshTokenId, refreshToken);
@@ -100,7 +101,7 @@ namespace Portfolio.Backend.Services.Implementation
 				case VerificationResult.Success:
 					break;
 				case VerificationResult.SuccessRehashNeeded:
-					token.Value.TokenHash = _crypto.Hash(refreshToken);
+					token.ActiveToken.TokenHash = _crypto.Hash(refreshToken);
 					_database.SaveChanges();
 					break;
 			}
@@ -160,11 +161,7 @@ namespace Portfolio.Backend.Services.Implementation
 
 			if (token is null)
 			{
-				token = new RefreshToken
-				{
-					Owner = user,
-					CreationDate = DateTimeOffset.UtcNow,
-				};
+				token = _database.CreateProxy<RefreshToken>(v => v.Owner = user);
 
 				user.RefreshTokens.Add(token);
 			} else
@@ -173,17 +170,18 @@ namespace Portfolio.Backend.Services.Implementation
 				token = _database.Attach(token).Entity;
 			}
 
-			token.LastUpdatedDate = DateTimeOffset.UtcNow;
-			token.ExpirationDate = expiration;
-
 			// Generate a random string which will be the refresh token
 			var secretToken = _crypto.GenerateRandomString(_authenticationConfig.RefreshTokenLength, ICryptoHelper.AlphaNumericCharacters);
 
-			token.Value = new RefreshTokenValue
+			var newValue = _database.CreateProxy<RefreshTokenValue>(v =>
 			{
-				TokenHash = _crypto.Hash(secretToken),
-				ReferringToken = token
-			};
+				v.TokenHash = _crypto.Hash(secretToken);
+				v.ReferringToken = token;
+				v.ExpirationDate = expiration;
+				v.CreationDate = DateTimeOffset.UtcNow;
+			});
+
+			token.NewValue(newValue);
 
 			_database.SaveChanges();
 

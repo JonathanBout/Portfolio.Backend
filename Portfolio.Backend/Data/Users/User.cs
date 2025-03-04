@@ -1,4 +1,6 @@
-﻿namespace Portfolio.Backend.Data.Users
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Portfolio.Backend.Data.Users
 {
 	public class User
 	{
@@ -28,7 +30,8 @@
 		public DateTimeOffset PasswordResetExpiration { get; set; }
 		public DateTimeOffset LastPasswordResetRequest { get; set; }
 
-		public virtual IList<RefreshToken> RefreshTokens { get; set; } = [];
-		public virtual IReadOnlyList<RefreshToken> ActiveRefreshTokens => RefreshTokens.Where(t => !t.IsExpired()).ToList().AsReadOnly();
+		public virtual IList<RefreshToken> RefreshTokens { get; } = [];
+		[NotMapped]
+		public IReadOnlyList<RefreshToken> ActiveRefreshTokens => RefreshTokens.Where(t => !t.IsExpired()).ToList().AsReadOnly();
 	}
 }
