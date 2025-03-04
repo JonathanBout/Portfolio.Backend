@@ -16,7 +16,7 @@ namespace Portfolio.Backend.Extensions
 
 			options.Events ??= new JwtBearerEvents();
 
-			options.Events.OnTokenValidated += (TokenValidatedContext ctx) =>
+			options.Events.OnTokenValidated += ctx =>
 			{
 				if (ctx.Principal is null)
 					return Task.CompletedTask;
@@ -40,15 +40,13 @@ namespace Portfolio.Backend.Extensions
 					return Task.CompletedTask;
 				}
 
-				if (!user.RefreshTokens.Any(t => t.Id == tokenId))
+				var token = user.RefreshTokens.FirstOrDefault(t => t.Id == tokenId);
+
+				if (token?.IsExpired() is not false)
 				{
 					ctx.Fail(FailureMessage);
 					return Task.CompletedTask;
 				}
-
-				// TODO: Check if the refresh token was already used.
-				// If that's the case, the token should be invalidated as this is probably a replay attack.
-				// Before that, we need to keep all previous refresh tokens in the database.
 
 				return Task.CompletedTask;
 			};

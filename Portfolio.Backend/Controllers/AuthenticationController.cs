@@ -40,7 +40,7 @@ namespace Portfolio.Backend.Controllers
 				return TypedResults.Unauthorized();
 			}
 
-			UpdateRefreshToken(newRefreshToken.token, newRefreshToken.id, newRefreshToken.expiration);
+			UpdateRefreshTokenCookie(newRefreshToken.token, newRefreshToken.id, newRefreshToken.expiration);
 
 			return TypedResults.Ok(new CreatedAccessTokenResponse(accessToken));
 		}
@@ -56,7 +56,7 @@ namespace Portfolio.Backend.Controllers
 				return TypedResults.Unauthorized();
 			}
 
-			UpdateRefreshToken(token, id, expiration);
+			UpdateRefreshTokenCookie(token, id, expiration);
 
 			return TypedResults.Ok();
 		}
@@ -80,7 +80,7 @@ namespace Portfolio.Backend.Controllers
 			return TypedResults.Ok();
 		}
 
-		private void UpdateRefreshToken(string token, uint id, DateTimeOffset expiration)
+		private void UpdateRefreshTokenCookie(string token, uint id, DateTimeOffset expiration)
 		{
 			var combinedToken = $"{id}\t{token}";
 

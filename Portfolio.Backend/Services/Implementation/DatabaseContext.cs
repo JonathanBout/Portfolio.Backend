@@ -19,14 +19,9 @@ namespace Portfolio.Backend.Services.Implementation
 				entity.Property(e => e.Email).IsRequired();
 				entity.Property(e => e.PasswordHash).IsRequired();
 
-				entity.OwnsMany(u => u.RefreshTokens, t =>
-				{
-					t.WithOwner(t => t.Owner);
-					t.HasKey(t => t.Id);
-					t.Property(t => t.TokenHash).IsRequired();
-				});
+				entity.HasMany(u => u.RefreshTokens).WithOne(t => t.Owner).HasForeignKey(t => t.OwnerId).OnDelete(DeleteBehavior.Cascade);
 
-				entity.Property(u => u.NameSlug).HasComputedColumnSql("""lower(regexp_replace(full_name, E'[^a-zA-Z0-9_]+', '-', 'gi'))""", stored: true);
+				entity.Property(u => u.NameSlug).HasComputedColumnSql("lower(regexp_replace(full_name, E'[^a-zA-Z0-9_]+', '-', 'gi'))", stored: true);
 
 				entity.HasData(new User
 				{
@@ -35,6 +30,12 @@ namespace Portfolio.Backend.Services.Implementation
 					FullName = "Jonathan Bout",
 					Description = "Yes. It's me.",
 				});
+			});
+
+			modelBuilder.Entity<RefreshToken>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+				entity.HasMany(e => e.Values).WithOne(v => v.ReferringToken).OnDelete(DeleteBehavior.Cascade);
 			});
 		}
 	}

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Portfolio.Backend.Configuration;
 using Portfolio.Backend.Data.Users;
@@ -13,12 +14,14 @@ namespace Portfolio.Backend.Services.Implementation
 		DatabaseContext database,
 		ICryptoHelper crypto,
 		IOptionsSnapshot<AuthenticationConfiguration> authenticationOptions,
-		IEmailer emailer) : IAuthenticator
+		IEmailer emailer,
+		IIntruderDetector intruderDetector) : IAuthenticator
 	{
 		private readonly DatabaseContext _database = database;
 		private readonly ICryptoHelper _crypto = crypto;
 		private readonly IEmailer _emailer = emailer;
 		private readonly AuthenticationConfiguration _authenticationConfig = authenticationOptions.Value;
+		private readonly IIntruderDetector _intruderDetector = intruderDetector;
 
 		private DateTime AccessTokenExpiration => DateTime.UtcNow.AddMinutes(_authenticationConfig.AccessTokenExpirationMinutes);
 
@@ -40,10 +43,7 @@ namespace Portfolio.Backend.Services.Implementation
 
 			_database.SaveChanges();
 
-			_emailer.SendEmailAsync<IResetPasswordEmailProvider>(user, provider =>
-			{
-				provider.ResetToken = resetToken;
-			});
+			_emailer.SendEmailAsync<IResetPasswordEmailProvider>(user, provider => provider.ResetToken = resetToken);
 
 			return null;
 		}
@@ -89,18 +89,19 @@ namespace Portfolio.Backend.Services.Implementation
 			// check if the refresh token exists and is not expired
 			var token = user.RefreshTokens.FirstOrDefault(t => t.Id == refreshTokenId);
 
-			if (token is null || token.ExpirationDate < DateTimeOffset.Now)
+			if (token is not { ActiveToken: not null } || token.IsExpired())
 				return null;
 
 			// verify the tokens match
-			switch (_crypto.Verify(refreshToken, token.TokenHash))
+			switch (_crypto.Verify(refreshToken, token.ActiveToken.TokenHash))
 			{
 				case VerificationResult.Failed:
+					_intruderDetector.EnqueueInvalidAccessTokenUsage(refreshTokenId, refreshToken);
 					return null;
 				case VerificationResult.Success:
 					break;
 				case VerificationResult.SuccessRehashNeeded:
-					token.TokenHash = _crypto.Hash(refreshToken);
+					token.ActiveToken.TokenHash = _crypto.Hash(refreshToken);
 					_database.SaveChanges();
 					break;
 			}
@@ -152,40 +153,39 @@ namespace Portfolio.Backend.Services.Implementation
 		}
 
 		/// <summary>
-		/// Generates a new refresh token for the user. If a token is provided, it will be updated with a new token.
+		/// Generates a new refresh token for the user. If a token is provided, it will be updated with a new value.
 		/// </summary>
-		/// <param name="user"></param>
-		/// <param name="tokenToReplace"></param>
-		/// <returns></returns>
-		private RefreshTokenData GetRefreshToken(User user, RefreshToken? tokenToReplace = null)
+		private RefreshTokenData GetRefreshToken(User user, RefreshToken? token = null)
 		{
-			var token = _crypto.GenerateRandomString(_authenticationConfig.RefreshTokenLength, ICryptoHelper.AlphaNumericCharacters);
-
 			var expiration = DateTimeOffset.UtcNow.AddHours(_authenticationConfig.RefreshTokenExpirationHours);
 
-			RefreshToken refreshToken;
-
-			if (tokenToReplace is not null)
+			if (token is null)
 			{
-				// make sure we have a tracked version of the token
-				refreshToken = _database.Attach(tokenToReplace).Entity;
+				token = _database.CreateProxy<RefreshToken>(v => v.Owner = user);
+
+				user.RefreshTokens.Add(token);
 			} else
 			{
-				refreshToken = new RefreshToken
-				{
-					CreationDate = DateTimeOffset.UtcNow,
-				};
-
-				user.RefreshTokens.Add(refreshToken);
+				// make sure we have a tracked version of the token
+				token = _database.Attach(token).Entity;
 			}
 
-			refreshToken.LastUpdatedDate = DateTimeOffset.UtcNow;
-			refreshToken.ExpirationDate = expiration;
-			refreshToken.TokenHash = _crypto.Hash(token);
+			// Generate a random string which will be the refresh token
+			var secretToken = _crypto.GenerateRandomString(_authenticationConfig.RefreshTokenLength, ICryptoHelper.AlphaNumericCharacters);
+
+			var newValue = _database.CreateProxy<RefreshTokenValue>(v =>
+			{
+				v.TokenHash = _crypto.Hash(secretToken);
+				v.ReferringToken = token;
+				v.ExpirationDate = expiration;
+				v.CreationDate = DateTimeOffset.UtcNow;
+			});
+
+			token.NewValue(newValue);
 
 			_database.SaveChanges();
 
-			return (token, refreshToken.Id, expiration);
+			return (secretToken, token.Id, expiration);
 		}
 
 		public IEnumerable<RefreshToken> GetRefreshTokens(User user)
@@ -193,6 +193,12 @@ namespace Portfolio.Backend.Services.Implementation
 			return user.RefreshTokens;
 		}
 
+		/// <summary>
+		/// Revokes a refresh token from the user.
+		/// </summary>
+		/// <returns>
+		/// <see langword="true"/> if the token was revoked, <see langword="false"/> if the token was not found.
+		/// </returns>
 		public bool RevokeRefreshToken(User owner, uint tokenId)
 		{
 			var token = owner.RefreshTokens.FirstOrDefault(t => t.Id == tokenId);
@@ -206,7 +212,6 @@ namespace Portfolio.Backend.Services.Implementation
 
 			return true;
 		}
-
 
 		private static bool ValidatePasswordStrength(ReadOnlySpan<char> password)
 		{
