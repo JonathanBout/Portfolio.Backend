@@ -38,18 +38,28 @@ namespace Portfolio.Backend.Services.Caching
 			CacheKeyPrefix = GetType().Name + "_";
 		}
 
-		public Task<TResult?> Get(TModel model, bool forceFetch = false)
+		public async Task<TResult?> Get(TModel model, bool forceFetch = false)
 		{
 			string cacheKey = CacheKeyPrefix + GetCacheKey(model);
-			if (forceFetch)
+
+			var entry = Cache.Get<TResult?>(cacheKey);
+
+			if (forceFetch || entry is null)
 			{
-				Cache.Remove(cacheKey);
+				var newEntry = Cache.CreateEntry(cacheKey);
+				var newValue = await Fetch(newEntry, model);
+				if (newValue is null)
+				{
+					newEntry.Dispose();
+					return default;
+				}
+
+				newEntry.Value = newValue;
+				newEntry.AbsoluteExpirationRelativeToNow = EntryExpiration;
+				return newValue;
 			}
 
-			return Cache.GetOrCreateAsync(cacheKey, e => Fetch(e, model), new()
-			{
-				AbsoluteExpirationRelativeToNow = EntryExpiration
-			});
+			return entry;
 		}
 
 		protected abstract Task<TResult?> Fetch(ICacheEntry entry, TModel model);

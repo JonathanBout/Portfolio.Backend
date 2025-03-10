@@ -16,10 +16,13 @@ namespace Portfolio.Backend.Services.Implementation
 
 		protected override async Task<byte[]?> Fetch(ICacheEntry entry, RetrieveModel model)
 		{
-			var (icon, theme) = (model.Icon, model.Theme);
-
-			icon = HttpUtility.UrlEncode(icon);
-			theme = HttpUtility.UrlEncode(theme);
+			var icon = HttpUtility.UrlEncode(model.Icon);
+			var theme = HttpUtility.UrlEncode(model.Theme switch
+			{
+				"light" => "light",
+				"dark" => "dark",
+				_ => ""
+			});
 
 			var url = $"https://skillicons.dev/icons?i={icon}";
 
