@@ -44,6 +44,9 @@ namespace Portfolio.Backend.Services.Implementation
 			return result;
 		}
 
+		/// <summary>
+		/// Verifies the hash using the v1 hash system.
+		/// </summary>
 		public VerificationResult Verify_v1(ReadOnlySpan<byte> input, ReadOnlySpan<byte> hash)
 		{
 			var (keySize, saltSize, key, salt, iterations, memory, parallelism) = ParseHash_v1(hash);
@@ -99,6 +102,10 @@ namespace Portfolio.Backend.Services.Implementation
 			return argon2;
 		}
 
+		/// <summary>
+		/// Compare two byte arrays in constant time. This is used to prevent timing attacks.
+		/// The time is constant based on the length of the second array.
+		/// </summary>
 		public bool SecureCompare(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
 		{
 			// don't do any short-circuiting here, we want to compare all the bytes,
@@ -132,6 +139,10 @@ namespace Portfolio.Backend.Services.Implementation
 		{
 			return BinaryPrimitives.ReadInt32LittleEndian(hash[..sizeof(int)]);
 		}
+
+		/// <summary>
+		/// Hash the input using the v1 hash system.
+		/// </summary>
 		internal byte[] Hash_v1(ReadOnlySpan<byte> input)
 		{
 			/*
@@ -191,6 +202,10 @@ namespace Portfolio.Backend.Services.Implementation
 
 			return resultHash;
 		}
+
+		/// <summary>
+		/// Parse the hash in the v1 format to its components.
+		/// </summary>
 		internal static (int keySize, int saltSize, byte[] hash, byte[] salt, int iterations, int memory, int parallelism) ParseHash_v1(ReadOnlySpan<byte> hash)
 		{
 			var offset = sizeof(int); // skip the version number
