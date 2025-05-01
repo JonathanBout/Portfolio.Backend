@@ -13,4 +13,5 @@ updates:
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
-    interval: "monthly"
+    interval: "cron"
+    cronjob: "0 12 */2 * *" # 12:00 on the 2nd day of every month
