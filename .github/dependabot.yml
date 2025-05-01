@@ -6,13 +6,12 @@
 version: 2
 updates:
 - package-ecosystem: "nuget" # See documentation for possible values
-  directories: # Location of package manifests
-  - "/"
-    schedule:
-      interval: "cron"
-      cronjob: "00 7 3 * *"
+  directory: "/"
+  schedule:
+    interval: "cron"
+    cronjob: "00 7 3 * *"
 - package-ecosystem: "github-actions"
   directory: "/"
-    schedule:
-      interval: "cron"
-      cronjob: "00 7 3 * *"
+  schedule:
+    interval: "cron"
+    cronjob: "00 7 3 * *"
