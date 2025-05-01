@@ -8,10 +8,11 @@ updates:
 - package-ecosystem: "nuget" # See documentation for possible values
   directories: # Location of package manifests
   - "/"
-  schedule:
-    interval: "monthly"
+    schedule:
+      interval: "cron"
+      cronjob: "00 7 3 * *"
 - package-ecosystem: "github-actions"
   directory: "/"
-  schedule:
-    interval: "cron"
-    cronjob: "0 12 */2 * *" # 12:00 on the 2nd day of every month
+    schedule:
+      interval: "cron"
+      cronjob: "00 7 3 * *"
