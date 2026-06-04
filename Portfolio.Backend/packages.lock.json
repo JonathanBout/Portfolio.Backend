@@ -56,9 +56,9 @@
       },
       "Microsoft.EntityFrameworkCore.Design": {
         "type": "Direct",
-        "requested": "[9.0.15, )",
-        "resolved": "9.0.15",
-        "contentHash": "Q38R8kv3kScn8m02SSD3Clj4iD9ys+qtEm3BhM6VQUPeqkwwF26I4i9DQtouqmK8nzeL51409cEdDfmpo22NsA==",
+        "requested": "[9.0.16, )",
+        "resolved": "9.0.16",
+        "contentHash": "Cji3UmtwQ5CqXIeT6+lLxuATybcKkQqEaMTJ7mKLJOOfNg7oPankCC3Dw4BgrH4m1lUHX7+sY3jsCq8nOTndzw==",
         "dependencies": {
           "Humanizer.Core": "2.14.1",
           "Microsoft.Build.Framework": "17.8.43",
@@ -66,13 +66,13 @@
           "Microsoft.CodeAnalysis.CSharp": "4.8.0",
           "Microsoft.CodeAnalysis.CSharp.Workspaces": "4.8.0",
           "Microsoft.CodeAnalysis.Workspaces.MSBuild": "4.8.0",
-          "Microsoft.EntityFrameworkCore.Relational": "9.0.15",
-          "Microsoft.Extensions.Caching.Memory": "9.0.15",
-          "Microsoft.Extensions.Configuration.Abstractions": "9.0.15",
-          "Microsoft.Extensions.DependencyModel": "9.0.15",
-          "Microsoft.Extensions.Logging": "9.0.15",
+          "Microsoft.EntityFrameworkCore.Relational": "9.0.16",
+          "Microsoft.Extensions.Caching.Memory": "9.0.16",
+          "Microsoft.Extensions.Configuration.Abstractions": "9.0.16",
+          "Microsoft.Extensions.DependencyModel": "9.0.16",
+          "Microsoft.Extensions.Logging": "9.0.16",
           "Mono.TextTemplating": "3.0.0",
-          "System.Text.Json": "9.0.15"
+          "System.Text.Json": "9.0.16"
         }
       },
       "Microsoft.EntityFrameworkCore.Proxies": {
@@ -223,13 +223,13 @@
       },
       "Microsoft.EntityFrameworkCore.Relational": {
         "type": "Transitive",
-        "resolved": "9.0.15",
-        "contentHash": "RrU/Wgb6Hg7D/e3kEZjKNh7UZxc61i3iwM1wtR/fpKk090ZQTEzcZjIIKC8Jpl+WXeOaC3fPYH5++FRZKpS7kw==",
+        "resolved": "9.0.16",
+        "contentHash": "kqZY+wGgK2xJ3ldfW0UAD/IHfRRV0eMMiY1VBV4sajnl7/Lxb4LROHH/RsslFmhZkFFTqe07aSNlsPB621ml2A==",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore": "9.0.15",
-          "Microsoft.Extensions.Caching.Memory": "9.0.15",
-          "Microsoft.Extensions.Configuration.Abstractions": "9.0.15",
-          "Microsoft.Extensions.Logging": "9.0.15"
+          "Microsoft.EntityFrameworkCore": "9.0.16",
+          "Microsoft.Extensions.Caching.Memory": "9.0.16",
+          "Microsoft.Extensions.Configuration.Abstractions": "9.0.16",
+          "Microsoft.Extensions.Logging": "9.0.16"
         }
       },
       "Microsoft.Extensions.Caching.Abstractions": {
@@ -254,10 +254,10 @@
       },
       "Microsoft.Extensions.Configuration.Abstractions": {
         "type": "Transitive",
-        "resolved": "9.0.15",
-        "contentHash": "M9s2mDxtfNdS6SbemODzDxHgm+eIhZPSuTc0s0QazQoSceTXTv+OjthKqf8r/FehXtABXD01ijQNdtODDFtnxg==",
+        "resolved": "9.0.16",
+        "contentHash": "+Hgfx2NC+lLG7S47DxhASWp9bbCuEPyzO7s/JTJ9DLc0QXpFTBdJVQouoHaqqQCOD+78k+Np+/cSaQdqrhrf5g==",
         "dependencies": {
-          "Microsoft.Extensions.Primitives": "9.0.15"
+          "Microsoft.Extensions.Primitives": "9.0.16"
         }
       },
       "Microsoft.Extensions.DependencyInjection": {
@@ -275,8 +275,8 @@
       },
       "Microsoft.Extensions.DependencyModel": {
         "type": "Transitive",
-        "resolved": "9.0.15",
-        "contentHash": "zt6n0QA6ufiSYJFURYCnQcOP48fRvmlLtbKwgAoPoBjuBGZ+2g+yhu3MRxOjfiA3iHpjlMoDJcNMOhRMVG64oQ=="
+        "resolved": "9.0.16",
+        "contentHash": "/5Jr465g6szaY2FGh87Bl+lW0s24FLhHQwzcS+E8vsW4qrJEKUbr8ofZ4EJfsbRxGYeIfHUqSPv16zfW4dW58A=="
       },
       "Microsoft.Extensions.Diagnostics.Abstractions": {
         "type": "Transitive",
@@ -519,8 +519,8 @@
       },
       "System.Text.Json": {
         "type": "Transitive",
-        "resolved": "9.0.15",
-        "contentHash": "rQUurOZYEo81Cvq253gO4FTDO9r+RBUBQVI3q7qwS31SH1wtUfP+Aw23I81ZkFSUBC4f1hPqea0wxo15rR5/dA=="
+        "resolved": "9.0.16",
+        "contentHash": "BgvJQq4uc6jOiiuZ/5LTxrZ+hXTmnm/Q/Sq9/RM2LtBqY8YSA7UB8NgF6j0ZdqWrfvk9Z8AfwV+WMTONIOXESw=="
       },
       "System.Threading.Channels": {
         "type": "Transitive",
