@@ -44,14 +44,14 @@
       },
       "Microsoft.EntityFrameworkCore": {
         "type": "Direct",
-        "requested": "[9.0.20, )",
-        "resolved": "9.0.20",
-        "contentHash": "52/3+48fTVcVQopie1SZLLenAuyrG0Enr1eAEbw05b22dl6nbC8V0UHLFknodJOrVcqdYR1Pf6FMbNvvWuhB5A==",
+        "requested": "[9.0.22, )",
+        "resolved": "9.0.22",
+        "contentHash": "wBYt52v8cQ5abaA8jR3m+LPV8N3ymhz0pTPMvwYck9VZ9ItcYIu130qEYdsinMNt9co+4n7SMZdI1dFjJHIvNQ==",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore.Abstractions": "9.0.20",
-          "Microsoft.EntityFrameworkCore.Analyzers": "9.0.20",
-          "Microsoft.Extensions.Caching.Memory": "9.0.20",
-          "Microsoft.Extensions.Logging": "9.0.20"
+          "Microsoft.EntityFrameworkCore.Abstractions": "9.0.22",
+          "Microsoft.EntityFrameworkCore.Analyzers": "9.0.22",
+          "Microsoft.Extensions.Caching.Memory": "9.0.22",
+          "Microsoft.Extensions.Logging": "9.0.22"
         }
       },
       "Microsoft.EntityFrameworkCore.Design": {
@@ -77,14 +77,14 @@
       },
       "Microsoft.EntityFrameworkCore.Proxies": {
         "type": "Direct",
-        "requested": "[9.0.20, )",
-        "resolved": "9.0.20",
-        "contentHash": "aocNwclT22kn1Xg2RJYQSthCI/uTAkKCtH6QacdI5z1j9bFn8GEEEHvF5TFf6Zgd2CS8FcPG0KggYFVrOdalDA==",
+        "requested": "[9.0.22, )",
+        "resolved": "9.0.22",
+        "contentHash": "T/XiN/VO8ptsFE63ovEVjGBf3FeMxHqZXq+cIcyB4qmHlC6KQwrnqSwfaVxZt1BXJIM59kDJAaXvM3LADJEjYg==",
         "dependencies": {
           "Castle.Core": "5.2.1",
-          "Microsoft.EntityFrameworkCore": "9.0.20",
-          "Microsoft.Extensions.Caching.Memory": "9.0.20",
-          "Microsoft.Extensions.Logging": "9.0.20"
+          "Microsoft.EntityFrameworkCore": "9.0.22",
+          "Microsoft.Extensions.Caching.Memory": "9.0.22",
+          "Microsoft.Extensions.Logging": "9.0.22"
         }
       },
       "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": {
@@ -218,13 +218,13 @@
       },
       "Microsoft.EntityFrameworkCore.Abstractions": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "ity/Y3MG2hAxK/na+9vp0XQ6kDDwZ8thJfCl+MSBhRNyXgaBtb16SyX2W0uFL44k6BHDmohybJQSRXnjkI4jtA=="
+        "resolved": "9.0.22",
+        "contentHash": "H1OiSYqSi4q9LnYfr4H6qkMOiS+bMSylLkbTcjlotI0aRojjDPHS+P2JAIn+kvzd8+wcVbzD1Jw0JexBAjiK2Q=="
       },
       "Microsoft.EntityFrameworkCore.Analyzers": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "WCNEWRZGuYycp0vU9aAfEKGZOr7hGrJP4SpJkl2KzXzKqH9UY/2h6j2L3JYa/AZbKD7EffQGk09NmyEcml/OwQ=="
+        "resolved": "9.0.22",
+        "contentHash": "wtYr03ZnX3a7x92WE0yELwyhN2EooJ7BTlY4N2gBPaVBsg2XwjEKyyGBLbkhc9fgKaQ6ed1fEgnHmZ9YCfTlLQ=="
       },
       "Microsoft.EntityFrameworkCore.Relational": {
         "type": "Transitive",
